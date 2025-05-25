@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicație Tipărire Etichete A4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+    <!-- Logo deasupra header-ului -->
+    <div class="logo-container">
+        <img src="ergio.png" alt="" class="company-logo">
+    </div>
+    
+    <!-- Header cu titlul centrat și butonul Back -->
+    <div class="header-section">
+        <h1>Aplicație Tipărire Etichete A4 pentru Depozit</h1>
+        <a href="index.html" class="back-button">← Înapoi la Meniu</a>
+    </div>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="specia">Specia</label>
+                <select id="specia">
+                    <option value="">Selectează...</option>
+                    <option value="R">R</option>
+                    <option value="L">L</option>
+                    <option value="C">C</option>
+                    <option value="S">S</option>
+                    <option value="D">D</option>
+                    <option value="F">F</option>
+                    <option value="FR">FR</option>
+                    <option value="P">P</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="tip">Tip</label>
+                <select id="tip" onchange="updateNumeOptions()">
+                    <option value="">Selectează...</option>
+                    <option value="DIM">DIM</option>
+                    <option value="DIV">DIV</option>
+                    <option value="SF">SF</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="nume">Nume</label>
+                <select id="nume">
+                    <option value="">Selectează...</option>
+                    <option value="C24">C24</option>
+                    <option value="KVH_C24">KVH_C24</option>
+                    <option value="DUO_C24">DUO_C24</option>
+                    <option value="BSH_GL24h">BSH_GL24h</option>
+                    <option value="DK">DK</option>
+                    <option value="ARC">ARC</option>
+                    <option value="Lam_NF">Lam_NF</option>
+                    <option value="Lam_NFA">Lam_NFA</option>
+                    <option value="Lam_NFC">Lam_NFC</option>
+                    <option value="Lam_NFD">Lam_NFD</option>
+                    <option value="Lam_NFF">Lam_NFF</option>
+                    <option value="Lam_NFS">Lam_NFS</option>
+                    <option value="Lam_D">Lam_D</option>
+                    <option value="Lam_P">Lam_P</option>
+                    <option value="PL">PL</option>
+                    <option value="FRIZ_C24">FRIZ_C24</option>
+                    <option value="Lam_Duo">Lam_Duo</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="calitate">Calitate</label>
+                <select id="calitate">
+                    <option value="">Selectează...</option>
+                    <option value="PL">PL</option>
+                    <option value="ST">ST</option>
+                    <option value="CT">CT</option>
+                    <option value="THF">THF</option>
+                    <option value="THW">THW</option>
+                    <option value="FSC">FSC</option>
+                    <option value="ARS">ARS</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-top: 20px;">
+            <div class="form-group" style="grid-column: span 2;">
+                <label>Dimensiuni inițiale (L x l x G)</label>
+                <div class="dimensions-group">
+                    <input type="number" id="lungime" placeholder="Lungime">
+                    <input type="number" id="latime" placeholder="Lățime">
+                    <input type="number" id="grosime" placeholder="Grosime">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="bucati">Număr bucăți</label>
+                <input type="number" id="bucati" placeholder="Ex: 467">
+            </div>
+        </div>
+        
+        <div class="form-grid" style="margin-top: 20px;">
+            <div class="form-group">
+                <label>Locație</label>
+                <div class="location-group">
+                    <select id="perete">
+                        <option value="">Perete</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                        <option value="F">F</option>
+                        <option value="G">G</option>
+                    </select>
+                    <select id="coloana">
+                        <option value="">Coloană</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                    </select>
+                    <select id="rand">
+                        <option value="">Rând</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Dimensiuni adiționale (opțional, max 3)</label>
+            <div id="dimensions-list" class="dimensions-list"></div>
+            <button class="btn-add" onclick="addDimension()">+ Adaugă dimensiune</button>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-gryphon" onclick="startGryphonScanner()">🔫 Scanner Gryphon</button>
+            <button class="btn-scanner" onclick="startCameraScanner()">📱 Camera</button>
+            <button class="btn-primary" onclick="generatePreview()">Generează Previzualizare</button>
+            <button class="btn-print" onclick="printLabel()">
+                <i class="print-icon">🖨️</i> Tipărește
+            </button>
+            <button class="btn-secondary" onclick="clearForm()">🗑️ Șterge date din formular</button>
+        </div>
+
+        <div class="debug-info" id="debug-info">
+            <strong>Debug Info:</strong><br>
+            <span id="debug-content">Nu s-au scanat date încă...</span>
+        </div>
+        
+        <div class="preview-container" id="preview-container" style="display: none;">
+            <div class="label-preview" id="label-preview">
+                <div class="label-content" id="label-content"></div>
+                <div class="label-dimensions" id="label-dimensions"></div>
+                <div class="qr-container" id="qr-container"></div>
+                <div class="location-label" id="location-label"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Gryphon Modal -->
+    <div class="gryphon-container" id="gryphon-container">
+        <div class="gryphon-content">
+            <h3 style="margin-bottom: 20px;">Scanner Datalogic Gryphon</h3>
+            <div class="gryphon-animation">🔫</div>
+            <div class="gryphon-status" id="gryphon-status">Scannerul este gata pentru scanare</div>
+            <div class="gryphon-instructions">
+                • Poziționează scannerul deasupra QR-ului<br>
+                • Apasă trigger-ul pentru a scana<br>
+                • Pentru a anula, apasă ESC sau butonul de mai jos
+            </div>
+            <input 
+                type="text" 
+                id="scanner-input" 
+                class="scanner-input" 
+                autocomplete="off" 
+                spellcheck="false" 
+                autocorrect="off"
+                autocapitalize="off"
+                inputmode="none"
+                enterkeyhint="done"
+                aria-label="Intrare scanner Gryphon" 
+            />
+            <div style="margin-top: 30px;">
+                <button class="btn-secondary" onclick="stopGryphonScanner()">Anulează (ESC)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scanner Cameră Modal -->
+    <div class="scanner-container" id="scanner-container">
+        <div class="scanner-content">
+            <h3 style="text-align: center; margin-bottom: 20px;">Scanează Cod QR cu Camera</h3>
+            <div id="scanner-video" class="scanner-video">
+                <div class="status-message">Camera se încarcă...</div>
+            </div>
+            <div class="scanner-status" id="scanner-status">Poziționează codul QR în fața camerei</div>
+            <div class="scanner-controls">
+                <button class="btn-secondary" onclick="stopCameraScanner()">Anulează</button>
+                <button class="btn-primary" onclick="switchCamera()" id="switch-camera">Schimbă Camera</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+    
+    <!-- Scripts în ordine corectă -->
+    <script src="js/form-utils.js"></script>
+    <script src="js/camera-scanner.js"></script>
+    <script src="js/qr-processor.js"></script>
+    <script src="js/gryphon-scanner.js"></script>
+    <script src="js/keyboard-shortcuts-simple.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplicație Depozit - Meniu Principal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #BD3033 0%, #8B1A1B 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            padding: 60px 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .logo-container {
+            margin-bottom: 40px;
+        }
+
+        .company-logo {
+            height: 120px;
+            width: auto;
+            max-width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.8em;
+            background: linear-gradient(135deg, #BD3033 0%, #8B1A1B 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 1.2em;
+            line-height: 1.6;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .main-button {
+            padding: 20px 40px;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #1a237e, #283593);
+            color: white;
+            box-shadow: 0 8px 25px rgba(26, 35, 126, 0.3);
+        }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
+        }
+
+        .main-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-print:hover {
+            box-shadow: 0 15px 35px rgba(26, 35, 126, 0.4);
+        }
+
+        .btn-scan:hover {
+            box-shadow: 0 15px 35px rgba(76, 175, 80, 0.4);
+        }
+
+        .button-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        .button-description {
+            display: block;
+            font-size: 14px;
+            font-weight: normal;
+            margin-top: 8px;
+            opacity: 0.9;
+            text-transform: none;
+            letter-spacing: 0.5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 40px 30px;
+            }
+            
+            h1 {
+                font-size: 2.2em;
+            }
+            
+            .company-logo {
+                height: 80px;
+            }
+            
+            .main-button {
+                padding: 18px 30px;
+                font-size: 16px;
+            }
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #BD3033;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="logo-container">
+            <img src="ergio.png" alt="Ergio Logo" class="company-logo" onerror="this.style.display='none'">
+        </div>
+        
+        <h1>Aplicație Depozit</h1>
+        <p class="subtitle">Selectează operațiunea dorită pentru gestionarea etichetelor din depozit</p>
+        
+        <div class="buttons-container">
+            <button class="main-button btn-print" onclick="loadPrintPage()">
+                <span class="button-icon">🖨️</span>
+                Tipărire Etichete
+                <span class="button-description">Creează și tipărește etichete noi pentru produse</span>
+            </button>
+            
+            <button class="main-button btn-scan" onclick="loadScanPage()">
+                <span class="button-icon">📊</span>
+                Scanare Etichete
+                <span class="button-description">Scanează etichete existente și trimite datele în Google Sheets</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Se încarcă interfața...</p>
+        </div>
+    </div>
+
+    <script>
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function loadPrintPage() {
+            showLoading();
+            // Simulăm încărcarea pentru demo - în realitate se va redirecționa către pagina de tipărire
+            setTimeout(() => {
+                window.location.href = 'print-labels.html';
+            }, 500);
+        }
+
+        function loadScanPage() {
+            showLoading();
+            // Simulăm încărcarea pentru demo - în realitate se va redirecționa către pagina de scanare
+            setTimeout(() => {
+                window.location.href = 'scan-labels.html';
+            }, 500);
+        }
+    </script>
+</body>
+</html>
