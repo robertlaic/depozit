@@ -106,7 +106,7 @@ function populateFormFromQR(qrData) {
             }
     
     // Parsăm dimensiunea principală
-    // const dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);
+    // const dimensionMatch = mainDimension.match(/^(\d+)x(\d*)x(\d+)$/);
     const dimensionMatch = mainDimension.match(/^(\d+)x(\d*)x(\d+)$/);
     if (!dimensionMatch) {
         throw new Error('Format dimensiune invalid: trebuie să fie în formatul LxlxG');
@@ -141,7 +141,7 @@ function populateFormFromQR(qrData) {
             const qtyPart = parts[i + 1].trim();
             
             // Verificăm dacă dimensiunea este validă
-            const addDimMatch = dimPart.match(/(\d+)x(\d+)x(\d+)$/);
+            const addDimMatch = dimPart.match(/^(\d+)x(\d*)x(\d+)$/);
             if (addDimMatch && !isNaN(qtyPart)) {
                 const [, L, l, G] = addDimMatch;
                 additionalDims.push({
@@ -372,7 +372,7 @@ function processOldFormatQR(qrData) {
     console.log('Bucăți pentru prima parte:', bucatiPart);
     
     // Extragem dimensiunea din prima parte
-    const dimensionMatch = firstPart.match(/(\d+)x(\d+)x(\d+)$/);
+    const dimensionMatch = firstPart.match(/^(\d+)x(\d*)x(\d+)$/);
     if (!dimensionMatch) {
         throw new Error('Nu s-au găsit dimensiuni în format valid (LxlxG) în prima parte');
     }
@@ -425,7 +425,7 @@ function processOldFormatQR(qrData) {
         }
         
         // Verifică dacă este într-adevăr un produs cu dimensiuni
-        const partDimMatch = partProduct.match(/(\d+)x(\d+)x(\d+)$/);
+        const partDimMatch = partProduct.match(/^(\d+)x(\d*)x(\d+)$/);
         if (partDimMatch) {
             const [, partL, partl, partG] = partDimMatch;
             
