@@ -232,5 +232,45 @@
             }, 500);
         }
     </script>
+    <script>
+  // Înregistrarea Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('Service Worker înregistrat cu succes:', registration.scope);
+          
+          // Verificare actualizări
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            console.log('Se instalează un nou Service Worker...');
+            
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('Actualizare nouă disponibilă! Reîmprospătează pagina pentru a încărca noua versiune.');
+                
+                // Aici poți afișa o notificare utilizatorului despre actualizare
+                if (confirm('Există o actualizare disponibilă pentru aplicație. Reîmprospătezi acum?')) {
+                  window.location.reload();
+                }
+              }
+            });
+          });
+        })
+        .catch(error => {
+          console.error('Eroare la înregistrarea Service Worker:', error);
+        });
+        
+      // Verificare periodic pentru actualizări (la fiecare 30 minute)
+      setInterval(() => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            action: 'checkForUpdates'
+          });
+        }
+      }, 30 * 60 * 1000);
+    });
+  }
+</script>
 </body>
 </html>
