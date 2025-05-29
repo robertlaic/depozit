@@ -106,18 +106,22 @@ function populateFormFromQR(qrData) {
             }
     
     // Parsăm dimensiunea principală
-    let dimensionMatch = mainDimension.match(/^(\d+)x(\d*)x(\d+)$/);
+    let dimensionMatch;
     
-    // Dacă nu se potrivește, încercăm formatul pentru DIV (LxxG)
-    if (!dimensionMatch && tip === 'DIV') {
+    // Pentru DIV, verificăm formatul LxxG
+    if (tip === 'DIV') {
         dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
         if (dimensionMatch) {
-            // Reformatăm array-ul pentru a fi consistent
+            // Reformatăm array-ul pentru a fi consistent [full_match, lungime, latime, grosime]
             dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
         }
+    } else {
+        // Pentru alte tipuri, formatul standard LxlxG
+        dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
     }
+    
     if (!dimensionMatch) {
-        throw new Error('Format dimensiune invalid: trebuie să fie în formatul LxlxG');
+        throw new Error(`Format dimensiune invalid: ${mainDimension}. Trebuie să fie în formatul LxlxG sau LxxG pentru DIV`);
     }
     
     const [, lungime, latime, grosime] = dimensionMatch;
