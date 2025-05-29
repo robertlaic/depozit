@@ -108,17 +108,21 @@ function populateFormFromQR(qrData) {
     // Parsăm dimensiunea principală
     let dimensionMatch;
     
-    // Pentru DIV, verificăm formatul LxxG
-    if (tip === 'DIV') {
-        dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
-        if (dimensionMatch) {
-            // Reformatăm array-ul pentru a fi consistent [full_match, lungime, latime, grosime]
-            dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
-        }
-    } else {
-        // Pentru alte tipuri, formatul standard LxlxG
-        dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
-    }
+    // Pentru DIV, verificăm mai multe formate posibile
+            if (tip === 'DIV') {
+                // Verificăm formatul LxxG
+                dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
+                if (dimensionMatch) {
+                    // Reformatăm array-ul pentru a fi consistent [full_match, lungime, latime, grosime]
+                    dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
+                } else {
+                    // Verificăm și formatul standard LxlxG unde l poate fi gol sau zero
+                    dimensionMatch = mainDimension.match(/^(\d+)x(\s*|0)x(\d+)$/);
+                }
+            } else {
+                // Pentru alte tipuri, formatul standard LxlxG
+                dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
+            }
     
     if (!dimensionMatch) {
         throw new Error(`Format dimensiune invalid: ${mainDimension}. Trebuie să fie în formatul LxlxG sau LxxG pentru DIV`);
