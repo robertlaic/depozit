@@ -759,140 +759,177 @@
         }
 
         // Process QR data for Google Sheets format
-        function processQRForSheets(qrData) {
-            console.log('Processing QR for Sheets:', qrData);
-            
-            // Clean the data
-            let cleanedData = qrData
-                .replace(/Â/g, '|')
-                .replace(/\s+\|\s+/g, '|')
-                .replace(/\s+\|\s*/g, '|')
-                .replace(/\s*\|\s+/g, '|')
-                .trim();
-            
-            const lines = cleanedData.split('\n').filter(line => line.trim() !== '');
-            if (lines.length === 0) {
-                throw new Error('Date QR goale după curățare');
-            }
-            
-            const mainLine = lines[0];
-            const parts = mainLine.split('|');
-            
-            if (parts.length < 3) {
-                throw new Error('Format QR invalid: sunt necesare minim cod produs, dimensiune și bucăți');
-            }
-            
-            const productCode = parts[0].trim();
-            const mainDimension = parts[1].trim();
-            const mainQuantity = parts[2].trim();
-            
-            // Parse product code
-            const productParts = productCode.split('_').filter(p => p.length > 0);
-            if (productParts.length < 3) {
-                throw new Error('Format cod produs insuficient');
-            }
-            
-            const specia = productParts[0];
-            const tip = productParts[1];
-            const calitate = productParts[productParts.length - 1];
-            const numeParts = productParts.slice(2, -1);
-            const nume = numeParts.length > 0 ? numeParts.join('_') : productParts[2];
-            
-            // Parse main dimension
-            const dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);
-            if (!dimensionMatch) {
-                throw new Error('Format dimensiune invalid');
-            }
-            
-            const [, lungime, latime, grosime] = dimensionMatch;
-            // Pentru DIV, mainQuantity reprezintă volumul, nu bucățile
-                    let volum = 0;
-                    let nrBuc = 0;
-
-                    if (tip === 'DIV') {
-                        // Pentru DIV, al treilea parametru din QR este volumul (cu punct ca separator)
-                        volum = parseFloat(mainQuantity.replace(',', '.')) || 0;
-                        nrBuc = ''; // Lăsăm gol pentru DIV
-                    } else {
-                        // Pentru restul, calculăm volumul normal
-                        nrBuc = parseInt(mainQuantity) || 0;
-                        volum = calculateVolume(lungime, latime, grosime, nrBuc);
-                    }
-            
-            // // Calculate volume with 4 decimals: V = nr.buc * (L * l * G) / 10^9
-            // const volum = calculateVolume(lungime, latime, grosime, mainQuantity);
-            
-            // Extract location if present
-            let locatie = '';
-            const lastPart = parts[parts.length - 1];
-            const locationMatch = lastPart.match(/([A-G])-(\d+)-(\d+)$/);
-            if (locationMatch) {
-                locatie = lastPart;
-            }
-            
-            // Current date
-            const currentDate = new Date().toLocaleDateString('ro-RO');
-                      
-            // Create main entry
-            const mainEntry = {
-                cod: `${specia}_${tip}_${nume}_${calitate}_${lungime}x${latime}x${grosime}`,
-                tip: tip,
-                lungime: parseInt(lungime),
-                latime: tip === 'DIV' ? '' : parseInt(latime), // Gol pentru DIV
-                grosime: parseInt(grosime),
-                nr_buc: tip === 'DIV' ? '' : nrBuc, // Gol pentru DIV
-                volum: volum, // Pentru DIV este valoarea directă, pentru restul calculată
-                calitate: calitate,
-                furnizor: '',
-                data: currentDate,
-                id_prod: '',
-                specia: specia,
-                nume: nume,
-                bon_consum: '',
-                locatie: locatie
-            };
-            
-            const entries = [mainEntry];
-            
-            // Process additional dimensions if present
-            // Pentru DIV nu procesăm dimensiuni adiționale
-        if (tip !== 'DIV') {
-            for (let i = 3; i < parts.length - 1; i += 2) {
-                if (i + 1 < parts.length) {
-                    const dimPart = parts[i].trim();
-                    const qtyPart = parts[i + 1].trim();
-                    
-                    const addDimMatch = dimPart.match(/(\d+)x(\d+)x(\d+)$/);
-                    if (addDimMatch && !isNaN(qtyPart)) {
-                        const [, L, l, G] = addDimMatch;
-                        const addVolum = calculateVolume(L, l, G, qtyPart);
-                        
-                        const additionalEntry = {
-                            cod: `${specia}_${tip}_${nume}_${calitate}_${L}x${l}x${G}`,
-                            tip: tip,
-                            lungime: parseInt(L),
-                            latime: parseInt(l),
-                            grosime: parseInt(G),
-                            nr_buc: parseInt(qtyPart),
-                            volum: addVolum,
-                            calitate: calitate,
-                            furnizor: '',
-                            data: currentDate,
-                            id_prod: '',
-                            specia: specia,
-                            nume: nume,
-                            bon_consum: '',
-                            locatie: locatie
-                        };
-                        
-                        entries.push(additionalEntry);
-                    }
+     
+function processQRForSheets(qrData) {
+    console.log('Processing QR for Sheets:', qrData);
+    
+    // Clean the data
+    let cleanedData = qrData
+        .replace(/Â/g, '|')
+        .replace(/\s+\|\s+/g, '|')
+        .replace(/\s+\|\s*/g, '|')
+        .replace(/\s*\|\s+/g, '|')
+        .trim();
+    
+    const lines = cleanedData.split('\n').filter(line => line.trim() !== '');
+    if (lines.length === 0) {
+        throw new Error('Date QR goale după curățare');
+    }
+    
+    const mainLine = lines[0];
+    const parts = mainLine.split('|');
+    
+    if (parts.length < 3) {
+        throw new Error('Format QR invalid: sunt necesare minim cod produs, dimensiune și bucăți');
+    }
+    
+    const productCode = parts[0].trim();
+    const mainDimension = parts[1].trim();
+    const mainQuantity = parts[2].trim();
+    
+    console.log('Product Code:', productCode);
+    console.log('Dimension:', mainDimension);
+    console.log('Quantity/Volume:', mainQuantity);
+    
+    // Parse product code
+    const productParts = productCode.split('_').filter(p => p.length > 0);
+    if (productParts.length < 3) {
+        throw new Error('Format cod produs insuficient');
+    }
+    
+    const specia = productParts[0];
+    const tip = productParts[1];
+    const calitate = productParts[productParts.length - 1];
+    const numeParts = productParts.slice(2, -1);
+    const nume = numeParts.length > 0 ? numeParts.join('_') : productParts[2];
+    
+    console.log('Tip detectat:', tip);
+    
+    // Parse main dimension - cod optimizat pentru DIV
+    let dimensionMatch;
+    if (tip === 'DIV') {
+        // Verificăm formatul pentru DIV (LxxG)
+        dimensionMatch = mainDimension.match(/(\d+)xx(\d+)$/);
+        if (dimensionMatch) {
+            // Reformatăm să aibă structura [match, lungime, latime, grosime]
+            // Pentru DIV, lățimea va fi setată la 0
+            dimensionMatch = [dimensionMatch[0], dimensionMatch[1], "0", dimensionMatch[2]];
+            console.log('Format DIV detectat cu succes (LxxG)');
+        } else {
+            // Încercăm și alte formate posibile pentru DIV
+            const parts = mainDimension.split('x');
+            if (parts.length >= 2) {
+                const lungime = parts[0];
+                const grosime = parts[parts.length - 1];
+                if (!isNaN(lungime) && !isNaN(grosime)) {
+                    dimensionMatch = [mainDimension, lungime, "0", grosime];
+                    console.log('Format DIV detectat manual:', lungime, 'x0x', grosime);
                 }
             }
-            
-            return entries;
+        }
+    } else {
+        // Pentru celelalte tipuri, folosim formatul standard LxlxG
+        dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);
+    }
+    
+    if (!dimensionMatch) {
+        console.error('Format dimensiune invalid:', mainDimension, 'Tip:', tip);
+        throw new Error('Format dimensiune invalid: ' + mainDimension);
+    }
+    
+    const [, lungime, latime, grosime] = dimensionMatch;
+    console.log('Dimensiuni extrase:', { lungime, latime, grosime });
+    
+    // Pentru DIV, mainQuantity reprezintă volumul, nu bucățile
+    let volum = 0;
+    let nrBuc = 0;
+
+    if (tip === 'DIV') {
+        // Pentru DIV, al treilea parametru din QR este volumul (cu punct ca separator)
+        volum = parseFloat(mainQuantity.replace(',', '.')) || 0;
+        nrBuc = ''; // Lăsăm gol pentru DIV
+        console.log('DIV: volum direct din QR:', volum);
+    } else {
+        // Pentru restul, calculăm volumul normal
+        nrBuc = parseInt(mainQuantity) || 0;
+        volum = calculateVolume(lungime, latime, grosime, nrBuc);
+        console.log('Non-DIV: volum calculat:', volum);
+    }
+
+    // Extract location if present
+    let locatie = '';
+    const lastPart = parts[parts.length - 1];
+    const locationMatch = lastPart.match(/([A-G])-(\d+)-(\d+)$/);
+    if (locationMatch) {
+        locatie = lastPart;
+    }
+    
+    // Current date
+    const currentDate = new Date().toLocaleDateString('ro-RO');
+              
+    // Create main entry
+    const mainEntry = {
+        cod: `${specia}_${tip}_${nume}_${calitate}_${lungime}x${latime}x${grosime}`,
+        tip: tip,
+        lungime: parseInt(lungime),
+        latime: tip === 'DIV' ? '' : parseInt(latime), // Gol pentru DIV
+        grosime: parseInt(grosime),
+        nr_buc: tip === 'DIV' ? '' : nrBuc, // Gol pentru DIV
+        volum: volum, // Pentru DIV este valoarea directă, pentru restul calculată
+        calitate: calitate,
+        furnizor: '',
+        data: currentDate,
+        id_prod: '',
+        specia: specia,
+        nume: nume,
+        bon_consum: '',
+        locatie: locatie
+    };
+    
+    console.log('Entry creat:', mainEntry);
+    
+    const entries = [mainEntry];
+    
+    // Process additional dimensions if present
+    // Pentru DIV nu procesăm dimensiuni adiționale
+    if (tip !== 'DIV') {
+        for (let i = 3; i < parts.length - 1; i += 2) {
+            if (i + 1 < parts.length) {
+                const dimPart = parts[i].trim();
+                const qtyPart = parts[i + 1].trim();
+                
+                const addDimMatch = dimPart.match(/(\d+)x(\d+)x(\d+)$/);
+                if (addDimMatch && !isNaN(qtyPart)) {
+                    const [, L, l, G] = addDimMatch;
+                    const addVolum = calculateVolume(L, l, G, qtyPart);
+                    
+                    const additionalEntry = {
+                        cod: `${specia}_${tip}_${nume}_${calitate}_${L}x${l}x${G}`,
+                        tip: tip,
+                        lungime: parseInt(L),
+                        latime: parseInt(l),
+                        grosime: parseInt(G),
+                        nr_buc: parseInt(qtyPart),
+                        volum: addVolum,
+                        calitate: calitate,
+                        furnizor: '',
+                        data: currentDate,
+                        id_prod: '',
+                        specia: specia,
+                        nume: nume,
+                        bon_consum: '',
+                        locatie: locatie
+                    };
+                    
+                    entries.push(additionalEntry);
+                }
+            }
         }
     }
+    
+    return entries;
+}
+
         // Add scanned data to table with color grouping
         function addScannedDataToTable(entries) {
             const tbody = document.getElementById('data-tbody');
