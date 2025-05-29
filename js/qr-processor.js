@@ -108,25 +108,68 @@ function populateFormFromQR(qrData) {
     // Parsăm dimensiunea principală
     let dimensionMatch;
     
-    // Pentru DIV, verificăm mai multe formate posibile
-            if (tip === 'DIV') {
-                // Verificăm formatul LxxG
-                dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
-                if (dimensionMatch) {
-                    // Reformatăm array-ul pentru a fi consistent [full_match, lungime, latime, grosime]
-                    dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
-                } else {
-                    // Verificăm și formatul standard LxlxG unde l poate fi gol sau zero
-                    dimensionMatch = mainDimension.match(/^(\d+)x(\s*|0)x(\d+)$/);
-                }
-            } else {
-                // Pentru alte tipuri, formatul standard LxlxG
-                dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
-            }
+   // În qr-processor.js, modifică codul pentru detectarea formatului DIV
+
+// Adaugă un log special pentru a vedea exact ce primim
+console.log('Dimensiune DIV scanată raw:', mainDimension);
+console.log('Caractere exacte în dimensiune:', [...mainDimension].map((c, i) => 
+    `Poziția ${i}: '${c}' (cod ${c.charCodeAt(0)})`).join(', '));
+
+// Pentru DIV, verificăm multiple formate posibile
+if (tip === 'DIV') {
+    // Prima încercare: Formatul exact 9000xx43
+    dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
     
-    if (!dimensionMatch) {
-        throw new Error(`Format dimensiune invalid: ${mainDimension}. Trebuie să fie în formatul LxlxG sau LxxG pentru DIV`);
+    if (dimensionMatch) {
+        console.log('Format LxxG detectat cu succes!');
+        dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
+    } else {
+        // A doua încercare: Dacă primul xx nu e detectat, încercăm să găsim orice separator între lungime și grosime
+        const manualMatch = mainDimension.split(/x+/);
+        if (manualMatch.length >= 2) {
+            console.log('Format DIV detectat manual:', manualMatch);
+            const lungime = manualMatch[0];
+            const grosime = manualMatch[manualMatch.length - 1];
+            
+            if (lungime && grosime && !isNaN(lungime) && !isNaN(grosime)) {
+                console.log('Parsare manuală reușită pentru DIV:', { lungime, grosime });
+                dimensionMatch = [mainDimension, lungime, '', grosime];
+            }
+        }
     }
+} else {
+    // Pentru alte tipuri, formatul standard LxlxG
+    dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
+}
+
+// Verificare finală și afișare eroare detaliată dacă e necesar
+if (!dimensionMatch) {
+    console.error('EROARE CRITICĂ: Format dimensiune invalid pentru ' + tip);
+    console.error('Dimensiune primită:', mainDimension);
+    console.error('Format așteptat pentru DIV: "LxxG" (ex: 9000xx43)');
+    
+    // Încercăm o recuperare de ultimă instanță
+    if (tip === 'DIV' && mainDimension.includes('x')) {
+        const parts = mainDimension.split('x').filter(p => p.trim());
+        if (parts.length >= 2) {
+            const lungimeFortat = parts[0].trim();
+            const grosimeFortat = parts[parts.length-1].trim();
+            
+            if (!isNaN(lungimeFortat) && !isNaN(grosimeFortat)) {
+                console.log('RECUPERARE FORȚATĂ a dimensiunilor:', {
+                    lungime: lungimeFortat,
+                    grosime: grosimeFortat
+                });
+                dimensionMatch = [mainDimension, lungimeFortat, '', grosimeFortat];
+            }
+        }
+    }
+    
+    // Dacă tot nu funcționează, aruncăm eroarea
+    if (!dimensionMatch) {
+        throw new Error(`Format dimensiune invalid: "${mainDimension}". Pentru DIV trebuie să fie în format "LxxG" (ex: 9000xx43).`);
+    }
+}
     
     const [, lungime, latime, grosime] = dimensionMatch;
     console.log('Dimensiuni extrase:', { lungime, latime, grosime });
