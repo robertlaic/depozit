@@ -16,6 +16,7 @@ function showNotification(message, type = 'success') {
 }
 
 // Actualizează opțiunile pentru nume în funcție de tipul selectat
+// Adaugă în funcția updateNumeOptions() din form-utils.js
 function updateNumeOptions() {
     const tipSelect  = document.getElementById('tip');
     const numeSelect = document.getElementById('nume');
@@ -54,29 +55,72 @@ function updateNumeOptions() {
         numeSelect.value = currentSelection;
     }
     
-    // Gestionează afișarea câmpurilor în funcție de tip            // ==== noul bloc de toggle pentru DIV ====
-        const dimsIniLabel      = document.getElementById('label-dimensiuni-initiale');
-        const latimeInput       = document.getElementById('latime');
-        const bucatiContainer   = document.getElementById('bucati')?.parentElement;
-        const volumDivContainer = document.getElementById('volum-div-container');
+    // Gestionează afișarea câmpurilor în funcție de tip
+    const dimsIniLabel      = document.getElementById('label-dimensiuni-initiale');
+    const latimeInput       = document.getElementById('latime');
+    const bucatiContainer   = document.getElementById('bucati')?.parentElement;
+    const volumDivContainer = document.getElementById('volum-div-container');
 
-        if (selectedTip === 'DIV') {
-            // 1) ascund doar câmpul Latime
-            if (latimeInput)        latimeInput.style.display    = 'none';
-            // 2) schimb label-ul
-            if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x G)';
-            // 3) ascund bucăți, arăt volum
-            if (bucatiContainer)    bucatiContainer.style.display   = 'none';
-            if (volumDivContainer)  volumDivContainer.style.display = 'block';
-        } else {
-            // la alte tipuri:
-            if (latimeInput)        latimeInput.style.display    = '';
-            if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x l x G)';
-            if (bucatiContainer)    bucatiContainer.style.display   = '';
-            if (volumDivContainer)  volumDivContainer.style.display = 'none';
+    if (selectedTip === 'DIV') {
+        // 1) ascund doar câmpul Latime
+        if (latimeInput)        latimeInput.style.display    = 'none';
+        // 2) schimb label-ul
+        if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x G)';
+        // 3) ascund bucăți, arăt volum
+        if (bucatiContainer)    bucatiContainer.style.display   = 'none';
+        if (volumDivContainer)  volumDivContainer.style.display = 'block';
+        
+        // 4) ADĂUGARE NOU: Dezactivez butonul pentru dimensiuni adiționale
+        toggleAdditionalDimensionsButton(false);
+        
+        // 5) ADĂUGARE NOU: Golesc lista de dimensiuni adiționale dacă există
+        if (typeof additionalDimensions !== 'undefined') {
+            additionalDimensions = [];
+            if (typeof renderDimensionsList === 'function') {
+                renderDimensionsList();
+            }
         }
+    } else {
+        // la alte tipuri:
+        if (latimeInput)        latimeInput.style.display    = '';
+        if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x l x G)';
+        if (bucatiContainer)    bucatiContainer.style.display   = '';
+        if (volumDivContainer)  volumDivContainer.style.display = 'none';
+        
+        // ADĂUGARE NOU: Activez butonul pentru dimensiuni adiționale
+        toggleAdditionalDimensionsButton(true);
+    }
 }
 
+// Funcție pentru activarea/dezactivarea butonului de dimensiuni adiționale
+function toggleAdditionalDimensionsButton(enable) {
+    const addDimensionButton = document.querySelector('.btn-add');
+    const dimensionsSection = document.querySelector('.form-group:has(#dimensions-list)');
+    
+    if (addDimensionButton) {
+        if (enable) {
+            // Activare buton
+            addDimensionButton.disabled = false;
+            addDimensionButton.style.opacity = '1';
+            addDimensionButton.style.cursor = 'pointer';
+            
+            // Afișare secțiune dimensiuni adiționale
+            if (dimensionsSection) {
+                dimensionsSection.style.display = 'block';
+            }
+        } else {
+            // Dezactivare buton
+            addDimensionButton.disabled = true;
+            addDimensionButton.style.opacity = '0.5';
+            addDimensionButton.style.cursor = 'not-allowed';
+            
+            // Eventual ascundere secțiune dimensiuni adiționale
+            if (dimensionsSection) {
+                dimensionsSection.style.display = 'none';
+            }
+        }
+    }
+}
 
 // Funcție pentru gestionarea checkbox-ului de locație externă
 function toggleLocatieExterna() {
@@ -369,7 +413,10 @@ function clearForm() {
     if (debugInfo) {
         debugInfo.classList.remove('show');
     }
-    
+     // Activează butonul pentru dimensiuni adiționale (deoarece tipul este resetat)
+    if (typeof toggleAdditionalDimensionsButton === 'function') {
+        toggleAdditionalDimensionsButton(true);
+    }
     showNotification('Formularul a fost resetat!');
 }
 

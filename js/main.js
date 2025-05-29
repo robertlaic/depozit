@@ -31,6 +31,11 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification('Scanner Gryphon gata de utilizare!', 'warning');
         }
     }, 1000);
+
+    // Verifică și setează starea butonului de dimensiuni adiționale la încărcarea paginii
+    if (typeof updateNumeOptions === 'function') {
+        updateNumeOptions();
+    }
 });
 
 // Verifică și expune funcțiile pentru onClick events în window doar dacă există

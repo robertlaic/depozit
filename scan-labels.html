@@ -805,6 +805,9 @@ function processQRForSheets(qrData) {
     
     console.log('Tip detectat:', tip);
     
+    // Salvăm dimensiunea originală pentru DIV (va fi folosită în cod)
+    let originalDimension = mainDimension;
+    
     // Parse main dimension - cod optimizat pentru DIV
     let dimensionMatch;
     if (tip === 'DIV') {
@@ -824,6 +827,8 @@ function processQRForSheets(qrData) {
                 if (!isNaN(lungime) && !isNaN(grosime)) {
                     dimensionMatch = [mainDimension, lungime, "0", grosime];
                     console.log('Format DIV detectat manual:', lungime, 'x0x', grosime);
+                    // Reformatăm dimensiunea originală pentru a fi siguri că are formatul LxxG
+                    originalDimension = `${lungime}xx${grosime}`;
                 }
             }
         }
@@ -869,7 +874,10 @@ function processQRForSheets(qrData) {
               
     // Create main entry
     const mainEntry = {
-        cod: `${specia}_${tip}_${nume}_${calitate}_${lungime}x${latime}x${grosime}`,
+        // Pentru DIV, formăm codul cu formatul original "LxxG"
+        cod: tip === 'DIV' 
+            ? `${specia}_${tip}_${nume}_${calitate}_${originalDimension}`
+            : `${specia}_${tip}_${nume}_${calitate}_${lungime}x${latime}x${grosime}`,
         tip: tip,
         lungime: parseInt(lungime),
         latime: tip === 'DIV' ? '' : parseInt(latime), // Gol pentru DIV

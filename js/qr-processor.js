@@ -174,6 +174,23 @@ if (!dimensionMatch) {
     const [, lungime, latime, grosime] = dimensionMatch;
     console.log('Dimensiuni extrase:', { lungime, latime, grosime });
     
+        // După ce setăm tipul produsului și înainte de a adăuga dimensiuni adiționale
+        if (tipElement) {
+            tipElement.value = tip;
+            // Apelează updateNumeOptions pentru a actualiza și starea butonului de dimensiuni adiționale
+            if (typeof updateNumeOptions === 'function') {
+                updateNumeOptions();
+            }
+        }
+
+        // Setăm dimensiunile adiționale doar dacă nu este DIV
+        if (typeof additionalDimensions !== 'undefined' && tip !== 'DIV') {
+            additionalDimensions = additionalDims;
+            if (typeof renderDimensionsList === 'function') {
+                renderDimensionsList();
+            }
+        }
+
     // Extragem dimensiunile adiționale
     const additionalDims = [];
     
