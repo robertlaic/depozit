@@ -30,12 +30,14 @@ function populateFormFromQR(qrData) {
     
     // ===== DETECTARE VECHI FORMAT =====
     // Verificăm dacă este formatul vechi (pentru compatibilitate)
-    const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x\d+x\d+\|\d+/);
+    // const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x\d+x\d+\|\d+/);
+    const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x\d*x\d+\|[\d.]+/);
     
-    if (isOldFormat) {
-        console.log('Detectat format vechi QR, încercăm să procesăm compatibil...');
-        return processOldFormatQR(qrData);
-    }
+    // if (isOldFormat) {
+    //     console.log('Detectat format vechi QR, încercăm să procesăm compatibil...');
+    //     return processOldFormatQR(qrData);
+    // }
+    if (isOldFormat) { return processOldFormatQR(qrData); }
     
     // ===== PROCESARE FORMAT NOU =====
     console.log('Procesare format nou standardizat:', mainLine);
