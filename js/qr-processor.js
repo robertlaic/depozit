@@ -1,4 +1,5 @@
 // Funcție pentru popularea formularului din datele QR
+
 function populateFormFromQR(qrData) {
     console.log('QR Data primit:', qrData);
     
@@ -30,14 +31,11 @@ function populateFormFromQR(qrData) {
     
     // ===== DETECTARE VECHI FORMAT =====
     // Verificăm dacă este formatul vechi (pentru compatibilitate)
-    // const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x\d+x\d+\|\d+/);
-    const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x\d*x\d+\|[\d.]+/);
+    const isOldFormat = !mainLine.match(/^[A-Z]_.*\|\d+x.*\d+\|[\d.]+/);
     
-    // if (isOldFormat) {
-    //     console.log('Detectat format vechi QR, încercăm să procesăm compatibil...');
-    //     return processOldFormatQR(qrData);
-    // }
-    if (isOldFormat) { return processOldFormatQR(qrData); }
+    if (isOldFormat) { 
+        return processOldFormatQR(qrData); 
+    }
     
     // ===== PROCESARE FORMAT NOU =====
     console.log('Procesare format nou standardizat:', mainLine);
@@ -52,12 +50,12 @@ function populateFormFromQR(qrData) {
     
     // Extragem informațiile de bază
     const productCode = parts[0].trim();      // Cod produs (R_DIM_C24_PL)
-    const mainDimension = parts[1].trim();    // Dimensiune principală (50000x600x80)
-    const mainQuantity = parts[2].trim();     // Bucăți pentru dimensiunea principală
+    const mainDimension = parts[1].trim();    // Dimensiune principală (50000x600x80 sau 9000xx43)
+    const mainQuantity = parts[2].trim();     // Bucăți pentru dimensiunea principală sau volum pentru DIV
     
     console.log('Cod produs:', productCode);
     console.log('Dimensiune principală:', mainDimension);
-    console.log('Bucăți principale:', mainQuantity);
+    console.log('Bucăți/volum principale:', mainQuantity);
     
     // Parsăm codul produsului
     const productParts = productCode.split('_').filter(p => p.length > 0);
@@ -75,122 +73,77 @@ function populateFormFromQR(qrData) {
     console.log('Componente produs:', { specia, tip, nume, calitate });
 
     // Pentru DIV, al treilea parametru este volumul, nu bucățile
-            if (tip === 'DIV') {
-                // Ascundem câmpul bucăți și afișăm câmpul volum
-                const bucatiContainer = document.getElementById('bucati')?.parentElement;
-                const volumDivContainer = document.getElementById('volum-div-container');
-                
-                if (bucatiContainer) bucatiContainer.style.display = 'none';
-                if (volumDivContainer) volumDivContainer.style.display = 'block';
-                
-                // Setăm volumul în câmpul dedicat
-                const volumDiv = document.getElementById('volum-div');
-                if (volumDiv) {
-                    // Convertim punct în virgulă pentru afișare
-                    volumDiv.value = mainQuantity.replace('.', ',');
-                }
-                
-                // Golim câmpul bucăți
-                if (bucatiElement) bucatiElement.value = '';
-            } else {
-                // Pentru non-DIV, procesare normală
-                const bucatiContainer = document.getElementById('bucati')?.parentElement;
-                const volumDivContainer = document.getElementById('volum-div-container');
-                
-                if (bucatiContainer) bucatiContainer.style.display = 'block';
-                if (volumDivContainer) volumDivContainer.style.display = 'none';
-                
-                if (bucatiElement && mainQuantity && !isNaN(mainQuantity)) {
-                    bucatiElement.value = mainQuantity;
-                }
-            }
+    if (tip === 'DIV') {
+        // Ascundem câmpul bucăți și afișăm câmpul volum
+        const bucatiContainer = document.getElementById('bucati')?.parentElement;
+        const volumDivContainer = document.getElementById('volum-div-container');
+        
+        if (bucatiContainer) bucatiContainer.style.display = 'none';
+        if (volumDivContainer) volumDivContainer.style.display = 'block';
+        
+        // Setăm volumul în câmpul dedicat
+        const volumDiv = document.getElementById('volum-div');
+        if (volumDiv) {
+            // Convertim punct în virgulă pentru afișare
+            volumDiv.value = mainQuantity.replace('.', ',');
+        }
+        
+        // Golim câmpul bucăți
+        const bucatiElement = document.getElementById('bucati');
+        if (bucatiElement) bucatiElement.value = '';
+    } else {
+        // Pentru non-DIV, procesare normală
+        const bucatiContainer = document.getElementById('bucati')?.parentElement;
+        const volumDivContainer = document.getElementById('volum-div-container');
+        
+        if (bucatiContainer) bucatiContainer.style.display = 'block';
+        if (volumDivContainer) volumDivContainer.style.display = 'none';
+        
+        const bucatiElement = document.getElementById('bucati');
+        if (bucatiElement && mainQuantity && !isNaN(mainQuantity)) {
+            bucatiElement.value = mainQuantity;
+        }
+    }
+    
+    // Salvăm dimensiunea originală pentru DIV (va fi folosită în cod)
+    let originalDimension = mainDimension;
     
     // Parsăm dimensiunea principală
     let dimensionMatch;
-    
-   // În qr-processor.js, modifică codul pentru detectarea formatului DIV
-
-// Adaugă un log special pentru a vedea exact ce primim
-console.log('Dimensiune DIV scanată raw:', mainDimension);
-console.log('Caractere exacte în dimensiune:', [...mainDimension].map((c, i) => 
-    `Poziția ${i}: '${c}' (cod ${c.charCodeAt(0)})`).join(', '));
-
-// Pentru DIV, verificăm multiple formate posibile
-if (tip === 'DIV') {
-    // Prima încercare: Formatul exact 9000xx43
-    dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
-    
-    if (dimensionMatch) {
-        console.log('Format LxxG detectat cu succes!');
-        dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
+    if (tip === 'DIV') {
+        // Verificăm formatul pentru DIV (LxxG)
+        dimensionMatch = mainDimension.match(/^(\d+)xx(\d+)$/);
+        if (dimensionMatch) {
+            // Reformatăm array-ul pentru a fi consistent [full_match, lungime, latime, grosime]
+            dimensionMatch = [dimensionMatch[0], dimensionMatch[1], '', dimensionMatch[2]];
+            console.log('Format DIV detectat cu succes (LxxG)');
+        } else {
+            // Încercăm și alte formate posibile pentru DIV
+            const parts = mainDimension.split('x');
+            if (parts.length >= 2) {
+                const lungime = parts[0];
+                const grosime = parts[parts.length - 1];
+                if (!isNaN(lungime) && !isNaN(grosime)) {
+                    dimensionMatch = [mainDimension, lungime, '', grosime];
+                    console.log('Format DIV detectat manual:', lungime, 'x0x', grosime);
+                    // Reformatăm dimensiunea originală pentru a fi siguri că are formatul LxxG
+                    originalDimension = `${lungime}xx${grosime}`;
+                }
+            }
+        }
     } else {
-        // A doua încercare: Dacă primul xx nu e detectat, încercăm să găsim orice separator între lungime și grosime
-        const manualMatch = mainDimension.split(/x+/);
-        if (manualMatch.length >= 2) {
-            console.log('Format DIV detectat manual:', manualMatch);
-            const lungime = manualMatch[0];
-            const grosime = manualMatch[manualMatch.length - 1];
-            
-            if (lungime && grosime && !isNaN(lungime) && !isNaN(grosime)) {
-                console.log('Parsare manuală reușită pentru DIV:', { lungime, grosime });
-                dimensionMatch = [mainDimension, lungime, '', grosime];
-            }
-        }
-    }
-} else {
-    // Pentru alte tipuri, formatul standard LxlxG
-    dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
-}
-
-// Verificare finală și afișare eroare detaliată dacă e necesar
-if (!dimensionMatch) {
-    console.error('EROARE CRITICĂ: Format dimensiune invalid pentru ' + tip);
-    console.error('Dimensiune primită:', mainDimension);
-    console.error('Format așteptat pentru DIV: "LxxG" (ex: 9000xx43)');
-    
-    // Încercăm o recuperare de ultimă instanță
-    if (tip === 'DIV' && mainDimension.includes('x')) {
-        const parts = mainDimension.split('x').filter(p => p.trim());
-        if (parts.length >= 2) {
-            const lungimeFortat = parts[0].trim();
-            const grosimeFortat = parts[parts.length-1].trim();
-            
-            if (!isNaN(lungimeFortat) && !isNaN(grosimeFortat)) {
-                console.log('RECUPERARE FORȚATĂ a dimensiunilor:', {
-                    lungime: lungimeFortat,
-                    grosime: grosimeFortat
-                });
-                dimensionMatch = [mainDimension, lungimeFortat, '', grosimeFortat];
-            }
-        }
+        // Pentru alte tipuri, formatul standard LxlxG
+        dimensionMatch = mainDimension.match(/^(\d+)x(\d+)x(\d+)$/);
     }
     
-    // Dacă tot nu funcționează, aruncăm eroarea
     if (!dimensionMatch) {
-        throw new Error(`Format dimensiune invalid: "${mainDimension}". Pentru DIV trebuie să fie în format "LxxG" (ex: 9000xx43).`);
+        console.error('Format dimensiune invalid:', mainDimension, 'Tip:', tip);
+        throw new Error(`Format dimensiune invalid: ${mainDimension}. Trebuie să fie în formatul LxlxG sau LxxG pentru DIV`);
     }
-}
     
     const [, lungime, latime, grosime] = dimensionMatch;
     console.log('Dimensiuni extrase:', { lungime, latime, grosime });
     
-        // După ce setăm tipul produsului și înainte de a adăuga dimensiuni adiționale
-        if (tipElement) {
-            tipElement.value = tip;
-            // Apelează updateNumeOptions pentru a actualiza și starea butonului de dimensiuni adiționale
-            if (typeof updateNumeOptions === 'function') {
-                updateNumeOptions();
-            }
-        }
-
-        // Setăm dimensiunile adiționale doar dacă nu este DIV
-        if (typeof additionalDimensions !== 'undefined' && tip !== 'DIV') {
-            additionalDimensions = additionalDims;
-            if (typeof renderDimensionsList === 'function') {
-                renderDimensionsList();
-            }
-        }
-
     // Extragem dimensiunile adiționale
     const additionalDims = [];
     
@@ -198,22 +151,34 @@ if (!dimensionMatch) {
     // Începem de la index 3 (după cod produs, dimensiune principală și bucăți)
     let locationFound = false;
     let perete = '', coloana = '', rand = '';
+    let locatieExterna = false;
+    let textLocatieExterna = '';
     
-    for (let i = 3; i < parts.length; i += 2) {
-        // Verificăm dacă am ajuns la ultima parte și dacă pare a fi o locație
+    for (let i = 3; i < parts.length; i++) {
+        const currentPart = parts[i].trim();
+        
+        // Verificăm dacă este o locație externă
+        if (currentPart.startsWith('EXT:')) {
+            locatieExterna = true;
+            textLocatieExterna = currentPart.substring(4); // Extrage textul după "EXT:"
+            console.log('Locație externă detectată:', textLocatieExterna);
+            break;
+        }
+        
+        // Verificăm dacă am ajuns la ultima parte și dacă pare a fi o locație din depozit
         if (i === parts.length - 1) {
-            const locationMatch = parts[i].match(/^([A-G])-(\d+)-(\d+)$/);
+            const locationMatch = currentPart.match(/^([A-G])-(\d+)-(\d+)$/);
             if (locationMatch) {
                 [, perete, coloana, rand] = locationMatch;
                 locationFound = true;
-                console.log('Locație găsită:', { perete, coloana, rand });
+                console.log('Locație din depozit găsită:', { perete, coloana, rand });
                 break;
             }
         }
         
-        // Verificăm dacă avem atât dimensiunea cât și bucățile
-        if (i + 1 < parts.length) {
-            const dimPart = parts[i].trim();
+        // Verificăm dacă avem atât dimensiunea cât și bucățile (pentru non-DIV)
+        if (i + 1 < parts.length && tip !== 'DIV') {
+            const dimPart = currentPart;
             const qtyPart = parts[i + 1].trim();
             
             // Verificăm dacă dimensiunea este validă
@@ -231,12 +196,17 @@ if (!dimensionMatch) {
                 console.log(`Dimensiune adițională ${additionalDims.length} detectată:`, { 
                     L, l, G, bucati: qtyPart 
                 });
+                
+                // Trecem peste partea cu bucăți
+                i++;
             }
         }
     }
     
     console.log('Dimensiuni adiționale detectate:', additionalDims);
-    console.log('Locație finală detectată:', { perete, coloana, rand, locationFound });
+    console.log('Locație finală detectată:', 
+                locatieExterna ? { externa: textLocatieExterna } : 
+                locationFound ? { perete, coloana, rand } : 'Nicio locație detectată');
     
     // ===== POPULARE FORMULAR =====
     // Completăm formularul cu datele extrase
@@ -249,20 +219,20 @@ if (!dimensionMatch) {
     const bucatiElement = document.getElementById('bucati');
     
     if (speciaElement) speciaElement.value = specia;
-    if (tipElement) tipElement.value = tip;
+    if (tipElement) {
+        tipElement.value = tip;
+        // Apelează updateNumeOptions pentru a actualiza formularul și a dezactiva/activa butonul 
+        // pentru dimensiuni adiționale în funcție de tip
+        if (typeof updateNumeOptions === 'function') {
+            updateNumeOptions();
+        }
+    }
     if (calitateElement) calitateElement.value = calitate;
     if (lungimeElement) lungimeElement.value = lungime;
     if (latimeElement) latimeElement.value = latime;
     if (grosimeElement) grosimeElement.value = grosime;
-    if (bucatiElement && mainQuantity && !isNaN(mainQuantity)) {
-        bucatiElement.value = mainQuantity;
-    }
     
     // Actualizează opțiunile pentru nume
-    if (typeof updateNumeOptions === 'function') {
-        updateNumeOptions();
-    }
-    
     setTimeout(() => {
         const numeSelect = document.getElementById('nume');
         if (numeSelect) {
@@ -280,17 +250,42 @@ if (!dimensionMatch) {
         }
     }, 50);
     
-    // Setăm dimensiunile adiționale dacă variabila există
-    if (typeof additionalDimensions !== 'undefined') {
+    // Setăm dimensiunile adiționale doar dacă nu este DIV
+    if (typeof additionalDimensions !== 'undefined' && tip !== 'DIV') {
         additionalDimensions = additionalDims;
         if (typeof renderDimensionsList === 'function') {
             renderDimensionsList();
         }
     }
     
-    // Setează locația dacă există
-    if (perete && coloana && rand) {
-        console.log('Setăm locația în formular:', { perete, coloana, rand });
+    // Setează locația în formular
+    if (locatieExterna) {
+        console.log('Setăm locația externă în formular:', textLocatieExterna);
+        
+        setTimeout(() => {
+            try {
+                const locatieExternaCheckbox = document.getElementById('locatie-externa');
+                const locatieExternaInput = document.getElementById('locatie-externa-input');
+                
+                if (locatieExternaCheckbox && locatieExternaInput) {
+                    locatieExternaCheckbox.checked = true;
+                    
+                    // Declanșează evenimentul de schimbare pentru a activa/dezactiva câmpurile corespunzătoare
+                    if (typeof toggleLocatieExterna === 'function') {
+                        toggleLocatieExterna();
+                    }
+                    
+                    // Setează valoarea locației externe
+                    locatieExternaInput.value = textLocatieExterna;
+                    
+                    console.log('Locație externă setată cu succes');
+                }
+            } catch (err) {
+                console.error('Eroare la setarea locației externe:', err);
+            }
+        }, 100);
+    } else if (locationFound && perete && coloana && rand) {
+        console.log('Setăm locația în depozit în formular:', { perete, coloana, rand });
         
         setTimeout(() => {
             try {
@@ -337,9 +332,9 @@ if (!dimensionMatch) {
                     }
                 }
                 
-                console.log('Locație setată cu succes');
+                console.log('Locație din depozit setată cu succes');
             } catch (err) {
-                console.error('Eroare la setarea locației:', err);
+                console.error('Eroare la setarea locației din depozit:', err);
             }
         }, 100);
     }
@@ -370,39 +365,73 @@ function processOldFormatQR(qrData) {
     }
     
     // ===== PROCESARE LOCAȚIE =====
-    // Verifică mai întâi dacă există o linie de locație separată (formatul: A-1-0)
+    // Verifică mai întâi dacă există o linie de locație separată sau externă
     let perete = '', coloana = '', rand = '';
     let locationFound = false;
+    let locatieExterna = false;
+    let textLocatieExterna = '';
     
     // Caută locația în ultimele caractere ale ultimei linii
     const lastLine = lines[lines.length - 1];
-    const locationPattern = /([A-G])-(\d+)-(\d+)$/;
-    const locationMatch = lastLine.match(locationPattern);
     
-    if (locationMatch) {
-        [, perete, coloana, rand] = locationMatch;
-        locationFound = true;
-        console.log('Locație găsită la sfârșitul ultimei linii:', { perete, coloana, rand });
+    // Verifică dacă este o locație externă
+    if (lastLine.includes('EXT:')) {
+        const extMatch = lastLine.match(/EXT:(.+)$/);
+        if (extMatch) {
+            textLocatieExterna = extMatch[1].trim();
+            locatieExterna = true;
+            console.log('Locație externă găsită:', textLocatieExterna);
+            
+            // Curăță ultima linie de pattern-ul locației externe
+            lines[lines.length - 1] = lastLine.replace(/EXT:.+$/, '').trim();
+            
+            // Dacă ultima linie este goală după îndepărtarea locației, o eliminăm
+            if (lines[lines.length - 1] === '') {
+                lines.pop();
+            }
+        }
+    } else {
+        // Verifică locația din depozit
+        const locationPattern = /([A-G])-(\d+)-(\d+)$/;
+        const locationMatch = lastLine.match(locationPattern);
         
-        // Curăță ultima linie de pattern-ul locației
-        lines[lines.length - 1] = lastLine.replace(locationPattern, '').trim();
-        
-        // Dacă ultima linie este goală după îndepărtarea locației, o eliminăm
-        if (lines[lines.length - 1] === '') {
-            lines.pop();
+        if (locationMatch) {
+            [, perete, coloana, rand] = locationMatch;
+            locationFound = true;
+            console.log('Locație din depozit găsită la sfârșitul ultimei linii:', { perete, coloana, rand });
+            
+            // Curăță ultima linie de pattern-ul locației
+            lines[lines.length - 1] = lastLine.replace(locationPattern, '').trim();
+            
+            // Dacă ultima linie este goală după îndepărtarea locației, o eliminăm
+            if (lines[lines.length - 1] === '') {
+                lines.pop();
+            }
         }
     }
     
-    // Verificăm dacă există linii separate pentru locație
+    // Verificăm dacă există linii separate pentru locație sau locație externă
     for (let i = 0; i < lines.length; i++) {
+        const currentLine = lines[i].trim();
+        
+        // Verifică locație externă
+        if (currentLine.startsWith('EXT:')) {
+            textLocatieExterna = currentLine.substring(4).trim();
+            locatieExterna = true;
+            lines.splice(i, 1); // Elimină linia de locație externă
+            console.log('Locație externă găsită pe linie separată:', textLocatieExterna);
+            break;
+        }
+        
+        // Verifică locație din depozit
         const separateLocationPattern = /^([A-G])-(\d+)-(\d+)$/;
-        const separateLocationMatch = lines[i].trim().match(separateLocationPattern);
+        const separateLocationMatch = currentLine.match(separateLocationPattern);
         
         if (separateLocationMatch) {
             [, perete, coloana, rand] = separateLocationMatch;
             lines.splice(i, 1); // Elimină linia de locație
             locationFound = true;
-            console.log('Locație găsită pe linie separată:', { perete, coloana, rand });
+            console.log('Locație din depozit găsită pe linie separată:', { perete, coloana, rand });
             break;
         }
     }
@@ -447,21 +476,70 @@ function processOldFormatQR(qrData) {
     console.log('Prima parte:', firstPart);
     console.log('Bucăți pentru prima parte:', bucatiPart);
     
-    // Extragem dimensiunea din prima parte
-    const dimensionMatch = firstPart.match(/^(\d+)x(\d*)x(\d+)$/);
-    if (!dimensionMatch) {
-        throw new Error('Nu s-au găsit dimensiuni în format valid (LxlxG) în prima parte');
+    // Verifică dacă în firstPart există o etichetă și dimensiune
+    const productMatchWithDim = firstPart.match(/^(.+)_(\d+x\d*x\d+)$/);
+    
+    // Dacă nu găsim formatul standard, încercăm formatul DIV cu xx
+    const productMatchWithDimDIV = !productMatchWithDim ? firstPart.match(/^(.+)_(\d+xx\d+)$/) : null;
+    
+    // Pregătim variabilele pentru dimensiuni
+    let productWithoutDim = '';
+    let dimensiune = '';
+    
+    if (productMatchWithDim) {
+        productWithoutDim = productMatchWithDim[1];
+        dimensiune = productMatchWithDim[2];
+    } else if (productMatchWithDimDIV) {
+        productWithoutDim = productMatchWithDimDIV[1];
+        dimensiune = productMatchWithDimDIV[2];
+    } else {
+        // Extragem dimensiunea din prima parte - verificăm mai multe pattern-uri
+        const dimMatch = firstPart.match(/(\d+)x(\d+)x(\d+)$/);
+        const dimMatchDIV = !dimMatch ? firstPart.match(/(\d+)xx(\d+)$/) : null;
+        
+        if (dimMatch) {
+            dimensiune = dimMatch[0];
+            productWithoutDim = firstPart.replace('_' + dimensiune, '');
+        } else if (dimMatchDIV) {
+            dimensiune = dimMatchDIV[0];
+            productWithoutDim = firstPart.replace('_' + dimensiune, '');
+        } else {
+            throw new Error('Nu s-au găsit dimensiuni în format valid (LxlxG sau LxxG) în prima parte');
+        }
     }
     
-    const [, lungime, latime, grosime] = dimensionMatch;
+    console.log('Produs fără dimensiuni:', productWithoutDim);
+    console.log('Dimensiune extrasă:', dimensiune);
+    
+    // Verificăm dacă dimensiunea este în format DIV (LxxG)
+    const isDIVFormat = dimensiune.includes('xx');
+    
+    // Parsăm dimensiunea în funcție de format
+    let lungime = '', latime = '', grosime = '';
+    if (isDIVFormat) {
+        const dimPartsDIV = dimensiune.split('xx');
+        if (dimPartsDIV.length === 2) {
+            lungime = dimPartsDIV[0];
+            latime = ''; // Lățimea este goală pentru DIV
+            grosime = dimPartsDIV[1];
+        } else {
+            throw new Error('Format dimensiune DIV invalid');
+        }
+    } else {
+        const dimParts = dimensiune.split('x');
+        if (dimParts.length === 3) {
+            lungime = dimParts[0];
+            latime = dimParts[1];
+            grosime = dimParts[2];
+        } else {
+            throw new Error('Format dimensiune standard invalid');
+        }
+    }
+    
     console.log('Dimensiuni principale:', { lungime, latime, grosime });
     
-    // Elimină dimensiunile din firstPart
-    const withoutDimensions = firstPart.replace(/_?\d+x\d+x\d+$/, '');
-    console.log('Informații etichetă fără dimensiuni:', withoutDimensions);
-    
-    // Împarte pe underscore pentru a extrage componentele etichetei
-    const parts = withoutDimensions.split('_').filter(p => p.length > 0);
+    // Împarte produsul pe underscore pentru a extrage componentele etichetei
+    const parts = productWithoutDim.split('_').filter(p => p.length > 0);
     console.log('Componente etichetă:', parts);
     
     if (parts.length < 3) {
@@ -502,16 +580,18 @@ function processOldFormatQR(qrData) {
         
         // Verifică dacă este într-adevăr un produs cu dimensiuni
         const partDimMatch = partProduct.match(/^(\d+)x(\d*)x(\d+)$/);
+        const partDimMatchDIV = !partDimMatch ? partProduct.match(/^(\d+)xx(\d+)$/) : null;
+        
         if (partDimMatch) {
             const [, partL, partl, partG] = partDimMatch;
             
             // Verifică dacă locația nu este atașată la sfârșit
-            if (!locationFound && i === productParts.length - 1) {
+            if (!locationFound && !locatieExterna && i === productParts.length - 1) {
                 const lastPartLocationMatch = partProduct.match(/([A-G])-(\d+)-(\d+)$/);
                 if (lastPartLocationMatch) {
                     [, perete, coloana, rand] = lastPartLocationMatch;
                     locationFound = true;
-                    console.log('Locație găsită la sfârșitul ultimei părți:', { perete, coloana, rand });
+                    console.log('Locație din depozit găsită la sfârșitul ultimei părți:', { perete, coloana, rand });
                     
                     // Nu adăugăm această parte ca dimensiune adițională
                     continue;
@@ -528,19 +608,34 @@ function processOldFormatQR(qrData) {
             });
             
             console.log(`Dimensiune adițională ${i} detectată:`, { L: partL, l: partl, G: partG, bucati: partBucati });
-        } else if (i === productParts.length - 1 && !locationFound) {
+        } else if (partDimMatchDIV) {
+            const [, partL, partG] = partDimMatchDIV;
+            
+            // Pentru DIV nu adăugăm dimensiuni adiționale
+            console.log(`Dimensiune adițională DIV ${i} detectată dar ignorată:`, { L: partL, G: partG });
+        } else if (i === productParts.length - 1 && !locationFound && !locatieExterna) {
             // Ultima parte ar putea conține doar locația
             const lastPartLocationMatch = part.match(/([A-G])-(\d+)-(\d+)$/);
             if (lastPartLocationMatch) {
                 [, perete, coloana, rand] = lastPartLocationMatch;
                 locationFound = true;
-                console.log('Locație găsită în ultima parte:', { perete, coloana, rand });
+                console.log('Locație din depozit găsită în ultima parte:', { perete, coloana, rand });
+            }
+            
+            // Verifică și locația externă
+            const lastPartExternalMatch = part.match(/EXT:(.+)$/);
+            if (lastPartExternalMatch) {
+                textLocatieExterna = lastPartExternalMatch[1].trim();
+                locatieExterna = true;
+                console.log('Locație externă găsită în ultima parte:', textLocatieExterna);
             }
         }
     }
     
     console.log('Dimensiuni adiționale detectate:', additionalDims);
-    console.log('Locație finală detectată:', { perete, coloana, rand, locationFound });
+    console.log('Locație finală detectată:', 
+                locatieExterna ? { externa: textLocatieExterna } : 
+                locationFound ? { perete, coloana, rand } : 'Nicio locație detectată');
     
     // Acum completăm formularul cu datele extrase
     // Setăm informațiile principale
@@ -553,20 +648,54 @@ function processOldFormatQR(qrData) {
     const bucatiElement = document.getElementById('bucati');
     
     if (speciaElement) speciaElement.value = specia;
-    if (tipElement) tipElement.value = tip;
+    if (tipElement) {
+        tipElement.value = tip;
+        // Apelează updateNumeOptions pentru a actualiza formularul și a dezactiva/activa butonul 
+        // pentru dimensiuni adiționale în funcție de tip
+        if (typeof updateNumeOptions === 'function') {
+            updateNumeOptions();
+        }
+    }
     if (calitateElement) calitateElement.value = calitate;
     if (lungimeElement) lungimeElement.value = lungime;
     if (latimeElement) latimeElement.value = latime;
     if (grosimeElement) grosimeElement.value = grosime;
-    if (bucatiElement && bucatiPart && !isNaN(bucatiPart)) {
+    
+    // Setăm volumul pentru DIV sau bucățile pentru celelalte tipuri
+    if (tip === 'DIV') {
+        // Pentru DIV, verificăm dacă avem o valoare de volum în QR
+        // Volumul poate fi în bucatiPart sau într-o altă parte
+        const volumDiv = document.getElementById('volum-div');
+        if (volumDiv) {
+            // Încercăm să extragem volumul (verificăm dacă bucatiPart conține un număr cu punct sau virgulă)
+            let volumValue = bucatiPart;
+            
+            // Dacă nu avem volum în bucatiPart, căutăm în alte părți
+            if (!volumValue || !/^[\d,.]+$/.test(volumValue)) {
+                for (let i = 1; i < productParts.length; i++) {
+                    const part = productParts[i].trim();
+                    if (/^[\d,.]+$/.test(part)) {
+                        volumValue = part;
+                        break;
+                    }
+                }
+            }
+            
+            // Formatăm volumul pentru afișare
+            if (volumValue && /^[\d,.]+$/.test(volumValue)) {
+                volumDiv.value = volumValue.replace('.', ',');
+                console.log('Volum setat pentru DIV:', volumValue);
+            } else {
+                // Valoare implicită dacă nu găsim un volum valid
+                volumDiv.value = '0,0000';
+                console.log('Nu s-a găsit volum valid pentru DIV, se folosește valoarea implicită');
+            }
+        }
+    } else if (bucatiElement && bucatiPart && !isNaN(bucatiPart)) {
         bucatiElement.value = bucatiPart;
     }
     
     // Actualizează opțiunile pentru nume
-    if (typeof updateNumeOptions === 'function') {
-        updateNumeOptions();
-    }
-    
     setTimeout(() => {
         const numeSelect = document.getElementById('nume');
         if (numeSelect) {
@@ -584,17 +713,42 @@ function processOldFormatQR(qrData) {
         }
     }, 50);
     
-    // Setăm dimensiunile adiționale
-    if (typeof additionalDimensions !== 'undefined') {
+    // Setăm dimensiunile adiționale doar dacă nu este DIV
+    if (typeof additionalDimensions !== 'undefined' && tip !== 'DIV') {
         additionalDimensions = additionalDims;
         if (typeof renderDimensionsList === 'function') {
             renderDimensionsList();
         }
     }
     
-    // Setează locația dacă există
-    if (perete && coloana && rand) {
-        console.log('Setăm locația în formular:', { perete, coloana, rand });
+    // Setează locația în formular
+    if (locatieExterna) {
+        console.log('Setăm locația externă în formular:', textLocatieExterna);
+        
+        setTimeout(() => {
+            try {
+                const locatieExternaCheckbox = document.getElementById('locatie-externa');
+                const locatieExternaInput = document.getElementById('locatie-externa-input');
+                
+                if (locatieExternaCheckbox && locatieExternaInput) {
+                    locatieExternaCheckbox.checked = true;
+                    
+                    // Declanșează evenimentul de schimbare pentru a activa/dezactiva câmpurile corespunzătoare
+                    if (typeof toggleLocatieExterna === 'function') {
+                        toggleLocatieExterna();
+                    }
+                    
+                    // Setează valoarea locației externe
+                    locatieExternaInput.value = textLocatieExterna;
+                    
+                    console.log('Locație externă setată cu succes');
+                }
+            } catch (err) {
+                console.error('Eroare la setarea locației externe:', err);
+            }
+        }, 100);
+    } else if (locationFound && perete && coloana && rand) {
+        console.log('Setăm locația în depozit în formular:', { perete, coloana, rand });
         
         setTimeout(() => {
             try {
@@ -641,7 +795,7 @@ function processOldFormatQR(qrData) {
                     }
                 }
                 
-                console.log('Locație setată cu succes din format vechi');
+                console.log('Locație din depozit setată cu succes din format vechi');
             } catch (err) {
                 console.error('Eroare la setarea locației:', err);
             }

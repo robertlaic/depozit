@@ -16,7 +16,6 @@ function showNotification(message, type = 'success') {
 }
 
 // Actualizează opțiunile pentru nume în funcție de tipul selectat
-// Adaugă în funcția updateNumeOptions() din form-utils.js
 function updateNumeOptions() {
     const tipSelect  = document.getElementById('tip');
     const numeSelect = document.getElementById('nume');
@@ -70,10 +69,12 @@ function updateNumeOptions() {
         if (bucatiContainer)    bucatiContainer.style.display   = 'none';
         if (volumDivContainer)  volumDivContainer.style.display = 'block';
         
-        // 4) ADĂUGARE NOU: Dezactivez butonul pentru dimensiuni adiționale
-        toggleAdditionalDimensionsButton(false);
+        // 4) Dezactivez butonul pentru dimensiuni adiționale
+        if (typeof toggleAdditionalDimensionsButton === 'function') {
+            toggleAdditionalDimensionsButton(false);
+        }
         
-        // 5) ADĂUGARE NOU: Golesc lista de dimensiuni adiționale dacă există
+        // 5) Golesc lista de dimensiuni adiționale dacă există
         if (typeof additionalDimensions !== 'undefined') {
             additionalDimensions = [];
             if (typeof renderDimensionsList === 'function') {
@@ -87,8 +88,10 @@ function updateNumeOptions() {
         if (bucatiContainer)    bucatiContainer.style.display   = '';
         if (volumDivContainer)  volumDivContainer.style.display = 'none';
         
-        // ADĂUGARE NOU: Activez butonul pentru dimensiuni adiționale
-        toggleAdditionalDimensionsButton(true);
+        // Activez butonul pentru dimensiuni adiționale
+        if (typeof toggleAdditionalDimensionsButton === 'function') {
+            toggleAdditionalDimensionsButton(true);
+        }
     }
 }
 
@@ -211,6 +214,7 @@ function renderDimensionsList() {
 }
 
 // Generează previzualizarea etichetei
+// Generează previzualizarea etichetei
 function generatePreview() {
     // 1) declarăm imediat checkbox-ul și input-ul pentru locație externă
     const locatieExternaCheckbox = document.getElementById('locatie-externa');
@@ -250,9 +254,8 @@ function generatePreview() {
     }
     
     const mainLabel = `${specia}_${tip}_${nume}_${calitate}`;
-    // const mainDimension = `${lungime}x${latime}x${grosime}`;
     const effectiveLatime = tip === 'DIV' ? '' : latime;
-    const mainDimension   = `${lungime}x${effectiveLatime}x${grosime}`;
+    const mainDimension = tip === 'DIV' ? `${lungime}xx${grosime}` : `${lungime}x${effectiveLatime}x${grosime}`;
 
     const labelContent = document.getElementById('label-content');
     if (labelContent) {
@@ -260,78 +263,82 @@ function generatePreview() {
     }
     
     const dimensionsContent = document.getElementById('label-dimensions');
-            if (dimensionsContent) {
-                let dimensionsHTML = '';
-                
-                if (tip === 'DIV') {
-                    // Pentru DIV: afișează doar L x x G - VOLUM MC (introdus manual)
-                    const volumDiv = document.getElementById('volum-div')?.value;
-                    if (volumDiv) {
-                        // Asigură-te că volumul are 4 zecimale
-                        let volumFormatted = volumDiv.replace('.', ','); // În caz că utilizatorul a introdus cu punct
-                        if (!volumFormatted.includes(',')) {
-                            volumFormatted += ',0000';
-                        } else {
-                            const parts = volumFormatted.split(',');
-                            const decimals = parts[1] || '';
-                            volumFormatted = parts[0] + ',' + decimals.padEnd(4, '0');
-                        }
-                        dimensionsHTML = `${lungime}x x${grosime} - ${volumFormatted} MC`;
-                    } else {
-                        dimensionsHTML = `${lungime}x x${grosime} - 0,0000 MC`;
-                    }
+    if (dimensionsContent) {
+        let dimensionsHTML = '';
+        
+        if (tip === 'DIV') {
+            // Pentru DIV: afișează doar L x x G - VOLUM MC (introdus manual)
+            const volumDiv = document.getElementById('volum-div')?.value;
+            if (volumDiv) {
+                // Asigură-te că volumul are 4 zecimale
+                let volumFormatted = volumDiv.replace('.', ','); // În caz că utilizatorul a introdus cu punct
+                if (!volumFormatted.includes(',')) {
+                    volumFormatted += ',0000';
                 } else {
-                    // Pentru restul: format normal
-                    dimensionsHTML = `${mainDimension} - ${bucati} BUC`;
+                    const parts = volumFormatted.split(',');
+                    const decimals = parts[1] || '';
+                    volumFormatted = parts[0] + ',' + decimals.padEnd(4, '0');
                 }
-                
-                // Adăugăm dimensiunile adiționale pentru non-DIV
-                if (tip !== 'DIV') {
-                    additionalDimensions.forEach(dim => {
-                        if (dim.L && dim.l && dim.G && dim.bucati) {
-                            dimensionsHTML += `<br>${dim.L}x${dim.l}x${dim.G} - ${dim.bucati} BUC`;
-                        }
-                    });
-                }
-                
-                dimensionsContent.innerHTML = dimensionsHTML;
+                dimensionsHTML = `${lungime}x x${grosime} - ${volumFormatted} MC`;
+            } else {
+                dimensionsHTML = `${lungime}x x${grosime} - 0,0000 MC`;
             }
+        } else {
+            // Pentru restul: format normal
+            dimensionsHTML = `${mainDimension} - ${bucati} BUC`;
+        }
+        
+        // Adăugăm dimensiunile adiționale pentru non-DIV
+        if (tip !== 'DIV') {
+            additionalDimensions.forEach(dim => {
+                if (dim.L && dim.l && dim.G && dim.bucati) {
+                    dimensionsHTML += `<br>${dim.L}x${dim.l}x${dim.G} - ${dim.bucati} BUC`;
+                }
+            });
+        }
+        
+        dimensionsContent.innerHTML = dimensionsHTML;
+    }
     
     const qrContainer = document.getElementById('qr-container');
     if (qrContainer && typeof QRCode !== 'undefined') {
         qrContainer.innerHTML = '';
         
         // Format QR optimizat: COD|DIMENSIUNE|BUCATI|DIMENSIUNE2|BUCATI2|...|LOCATIE
-       let qrParts = [];
-                if (tip === 'DIV') {
-                    const volumDiv = document.getElementById('volum-div')?.value || '0,0000';
-                    // Convertim volumul la format cu punct pentru QR
-                    const volumForQR = volumDiv.replace(',', '.');
-                    
-                    qrParts = [
-                        mainLabel,                  // COD
-                        mainDimension,              // DIMENSIUNE (va fi LxlxG chiar dacă afișăm LxxG)
-                        volumForQR                  // VOLUM în loc de bucăți
-                    ];
-                } else {
-                    qrParts = [
-                        mainLabel,                  // COD
-                        mainDimension,              // DIMENSIUNE
-                        bucati                      // BUCATI
-                    ];
-                    
-                    // Adăugăm dimensiunile adiționale pentru non-DIV
-                    additionalDimensions.forEach(dim => {
-                        if (dim.L && dim.l && dim.G && dim.bucati) {
-                            qrParts.push(`${dim.L}x${dim.l}x${dim.G}`);
-                            qrParts.push(dim.bucati);
-                        }
-                    });
+        let qrParts = [];
+        if (tip === 'DIV') {
+            const volumDiv = document.getElementById('volum-div')?.value || '0,0000';
+            // Convertim volumul la format cu punct pentru QR
+            const volumForQR = volumDiv.replace(',', '.');
+            
+            qrParts = [
+                mainLabel,                  // COD
+                mainDimension,              // DIMENSIUNE în format LxxG pentru DIV
+                volumForQR                  // VOLUM în loc de bucăți
+            ];
+        } else {
+            qrParts = [
+                mainLabel,                  // COD
+                mainDimension,              // DIMENSIUNE
+                bucati                      // BUCATI
+            ];
+            
+            // Adăugăm dimensiunile adiționale pentru non-DIV
+            additionalDimensions.forEach(dim => {
+                if (dim.L && dim.l && dim.G && dim.bucati) {
+                    qrParts.push(`${dim.L}x${dim.l}x${dim.G}`);
+                    qrParts.push(dim.bucati);
                 }
+            });
+        }
         
-        // Adăugăm locația la sfârșit dacă există
-        if (perete && coloana && rand) {
-            qrParts.push(`${perete}-${coloana}-${rand}`);    // LOCATIE
+        // MODIFICARE IMPORTANTĂ: Adăugăm locația externă sau din depozit
+        if (locatieExternaCheckbox && locatieExternaCheckbox.checked && locatieExternaInput.value.trim()) {
+            // Adăugăm locația externă la QR cu un prefix pentru a o distinge
+            qrParts.push(`EXT:${locatieExternaInput.value.trim()}`);
+        } else if (perete && coloana && rand) {
+            // Adăugăm locația din depozit
+            qrParts.push(`${perete}-${coloana}-${rand}`);
         }
         
         // Construim codul QR cu separatorul |
@@ -353,27 +360,27 @@ function generatePreview() {
     }
     
     // Pentru locație - verifică dacă este externă
-            const locationLabel = document.getElementById('location-label');
+    const locationLabel = document.getElementById('location-label');
 
-            if (locationLabel) {
-                if (locatieExternaCheckbox && locatieExternaCheckbox.checked && locatieExternaInput.value) {
-                    locationLabel.textContent = `Locație: ${locatieExternaInput.value}`;
-                    locationLabel.style.display = 'block';
-                } else if (perete && coloana && rand) {
-                    locationLabel.textContent = `Locație etichetă: ${perete}-${coloana}-${rand}`;
-                    locationLabel.style.display = 'block';
-                } else {
-                    locationLabel.style.display = 'none';
-                }
-            }
-                
-                const previewContainer = document.getElementById('preview-container');
-                if (previewContainer) {
-                    previewContainer.style.display = 'block';
-                }
-                
-                showNotification('Previzualizare generată cu succes!');
-            }
+    if (locationLabel) {
+        if (locatieExternaCheckbox && locatieExternaCheckbox.checked && locatieExternaInput.value) {
+            locationLabel.textContent = `Locație: ${locatieExternaInput.value}`;
+            locationLabel.style.display = 'block';
+        } else if (perete && coloana && rand) {
+            locationLabel.textContent = `Locație etichetă: ${perete}-${coloana}-${rand}`;
+            locationLabel.style.display = 'block';
+        } else {
+            locationLabel.style.display = 'none';
+        }
+    }
+            
+    const previewContainer = document.getElementById('preview-container');
+    if (previewContainer) {
+        previewContainer.style.display = 'block';
+    }
+            
+    showNotification('Previzualizare generată cu succes!');
+}
 
 // Resetează toate câmpurile formularului
 function clearForm() {
@@ -716,6 +723,7 @@ window.updateNumeOptions = updateNumeOptions;
 window.addDimension = addDimension;
 window.removeDimension = removeDimension;
 window.updateDimension = updateDimension;
+window.toggleAdditionalDimensionsButton = toggleAdditionalDimensionsButton;
 window.generatePreview = generatePreview;
 window.clearForm = clearForm;
 window.printLabel = printLabel;
