@@ -54,23 +54,27 @@ function updateNumeOptions() {
         numeSelect.value = currentSelection;
     }
     
-    // Gestionează afișarea câmpurilor în funcție de tip
-    const dimsIniContainer  = document.getElementById('dimensiuni-initiale-container');
-    const volumDivContainer = document.getElementById('volum-div-container');
-    const bucatiContainer   = document.getElementById('bucati')?.parentElement;
+    // Gestionează afișarea câmpurilor în funcție de tip            // ==== noul bloc de toggle pentru DIV ====
+        const dimsIniLabel      = document.getElementById('label-dimensiuni-initiale');
+        const latimeInput       = document.getElementById('latime');
+        const bucatiContainer   = document.getElementById('bucati')?.parentElement;
+        const volumDivContainer = document.getElementById('volum-div-container');
 
-    if (selectedTip === 'DIV') {
-        // ascundem toate câmpurile L×l×G și pe Bucăți,
-        // afișăm doar câmpul Volum
-        if (dimsIniContainer)  dimsIniContainer.style.display  = 'none';
-        if (bucatiContainer)    bucatiContainer.style.display    = 'none';
-        if (volumDivContainer)  volumDivContainer.style.display  = 'block';
-    } else {
-        // la orice alt tip, le afișăm pe toate
-        if (dimsIniContainer)  dimsIniContainer.style.display  = '';
-        if (bucatiContainer)    bucatiContainer.style.display    = '';
-        if (volumDivContainer)  volumDivContainer.style.display  = 'none';
-    }
+        if (selectedTip === 'DIV') {
+            // 1) ascund doar câmpul Latime
+            if (latimeInput)        latimeInput.style.display    = 'none';
+            // 2) schimb label-ul
+            if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x G)';
+            // 3) ascund bucăți, arăt volum
+            if (bucatiContainer)    bucatiContainer.style.display   = 'none';
+            if (volumDivContainer)  volumDivContainer.style.display = 'block';
+        } else {
+            // la alte tipuri:
+            if (latimeInput)        latimeInput.style.display    = '';
+            if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x l x G)';
+            if (bucatiContainer)    bucatiContainer.style.display   = '';
+            if (volumDivContainer)  volumDivContainer.style.display = 'none';
+        }
 }
 
 

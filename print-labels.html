@@ -89,7 +89,8 @@
         
         <div class="form-grid" style="margin-top: 20px;">
             <div class="form-group" style="grid-column: span 2;">
-                <label>Dimensiuni inițiale (L x l x G)</label>
+                <div class="form-group" id="dimensiuni-initiale-container" style="grid-column: span 2;"></div>
+                <label id="label-dimensiuni-initiale">Dimensiuni inițiale (L x l x G)</label>
                 <div class="dimensions-group">
                     <input type="number" id="lungime" placeholder="Lungime">
                     <input type="number" id="latime" placeholder="Lățime">
@@ -155,7 +156,7 @@
                     <input type="checkbox" id="locatie-externa" onchange="toggleLocatieExterna()">
                     Locație externă (nu este în depozit)
                 </label>
-                <input type="text" id="locatie-externa-input" placeholder="Ex: Client ABC, Șantier XYZ" style="display: none; margin-top: 10px;">
+                <input type="text" id="locatie-externa-input" placeholder="Ex: Depozit la gard,..." style="display: none; margin-top: 10px;">
             </div>   
             </div>
         </div>
