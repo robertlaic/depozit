@@ -101,6 +101,12 @@
                 <label for="bucati">Număr bucăți</label>
                 <input type="number" id="bucati" placeholder="Ex: 467">
             </div>
+            <div class="form-group" id="volum-div-container" style="display: none;">
+                <label for="volum-div">Volum (MC)</label>
+                <input type="text" id="volum-div" placeholder="Ex: 12,5000" 
+                    pattern="[0-9]+([,][0-9]{1,4})?" 
+                    title="Introduceți volumul cu maxim 4 zecimale, folosind virgula ca separator">
+            </div>
         </div>
         
         <div class="form-grid" style="margin-top: 20px;">
@@ -144,6 +150,13 @@
                         <option value="4">4</option>
                     </select>
                 </div>
+             <div class="form-group" style="margin-top: 15px;">
+                <label>
+                    <input type="checkbox" id="locatie-externa" onchange="toggleLocatieExterna()">
+                    Locație externă (nu este în depozit)
+                </label>
+                <input type="text" id="locatie-externa-input" placeholder="Ex: Client ABC, Șantier XYZ" style="display: none; margin-top: 10px;">
+            </div>   
             </div>
         </div>
         

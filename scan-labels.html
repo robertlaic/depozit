@@ -726,13 +726,13 @@
                 row.className = groupClass;
                 
                 row.innerHTML = `
-                    <td class="editable-cell" title="${entry.cod}" onclick="makeEditable(this, ${index}, 'cod', '${entry.cod}')">${entry.cod.length > 25 ? entry.cod.substring(0, 25) + '...' : entry.cod}</td>
+                <td class="editable-cell" title="${entry.cod}" onclick="makeEditable(this, ${index}, 'cod', '${entry.cod}')">${entry.cod.length > 25 ? entry.cod.substring(0, 25) + '...' : entry.cod}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'tip', '${entry.tip}')">${entry.tip}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'lungime', '${entry.lungime}')">${entry.lungime}</td>
-                    <td class="editable-cell" onclick="makeEditable(this, ${index}, 'latime', '${entry.latime}')">${entry.latime}</td>
+                    <td class="${entry.tip === 'DIV' ? '' : 'editable-cell'}" ${entry.tip === 'DIV' ? '' : `onclick="makeEditable(this, ${index}, 'latime', '${entry.latime}')"`}>${entry.latime}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'grosime', '${entry.grosime}')">${entry.grosime}</td>
-                    <td class="editable-cell" onclick="makeEditable(this, ${index}, 'nr_buc', '${entry.nr_buc}')">${entry.nr_buc}</td>
-                    <td title="Volum: ${formatVolumeForDisplay(entry.volum)} m³ (${entry.nr_buc} × ${entry.lungime}×${entry.latime}×${entry.grosime})">${formatVolumeForDisplay(entry.volum)}</td>
+                    <td class="${entry.tip === 'DIV' ? '' : 'editable-cell'}" ${entry.tip === 'DIV' ? '' : `onclick="makeEditable(this, ${index}, 'nr_buc', '${entry.nr_buc}')"`}>${entry.nr_buc}</td>
+                    <td title="Volum: ${formatVolumeForDisplay(entry.volum)} m³">${formatVolumeForDisplay(entry.volum)}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'calitate', '${entry.calitate}')">${entry.calitate}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'data', '${entry.data}')">${entry.data}</td>
                     <td class="editable-cell" onclick="makeEditable(this, ${index}, 'specia', '${entry.specia}')">${entry.specia}</td>
@@ -805,9 +805,22 @@
             }
             
             const [, lungime, latime, grosime] = dimensionMatch;
+            // Pentru DIV, mainQuantity reprezintă volumul, nu bucățile
+                    let volum = 0;
+                    let nrBuc = 0;
+
+                    if (tip === 'DIV') {
+                        // Pentru DIV, al treilea parametru din QR este volumul (cu punct ca separator)
+                        volum = parseFloat(mainQuantity.replace(',', '.')) || 0;
+                        nrBuc = ''; // Lăsăm gol pentru DIV
+                    } else {
+                        // Pentru restul, calculăm volumul normal
+                        nrBuc = parseInt(mainQuantity) || 0;
+                        volum = calculateVolume(lungime, latime, grosime, nrBuc);
+                    }
             
-            // Calculate volume with 4 decimals: V = nr.buc * (L * l * G) / 10^9
-            const volum = calculateVolume(lungime, latime, grosime, mainQuantity);
+            // // Calculate volume with 4 decimals: V = nr.buc * (L * l * G) / 10^9
+            // const volum = calculateVolume(lungime, latime, grosime, mainQuantity);
             
             // Extract location if present
             let locatie = '';
@@ -819,16 +832,16 @@
             
             // Current date
             const currentDate = new Date().toLocaleDateString('ro-RO');
-            
+                      
             // Create main entry
             const mainEntry = {
                 cod: `${specia}_${tip}_${nume}_${calitate}_${lungime}x${latime}x${grosime}`,
                 tip: tip,
                 lungime: parseInt(lungime),
-                latime: parseInt(latime),
+                latime: tip === 'DIV' ? '' : parseInt(latime), // Gol pentru DIV
                 grosime: parseInt(grosime),
-                nr_buc: parseInt(mainQuantity),
-                volum: volum,
+                nr_buc: tip === 'DIV' ? '' : nrBuc, // Gol pentru DIV
+                volum: volum, // Pentru DIV este valoarea directă, pentru restul calculată
                 calitate: calitate,
                 furnizor: '',
                 data: currentDate,
@@ -842,6 +855,8 @@
             const entries = [mainEntry];
             
             // Process additional dimensions if present
+            // Pentru DIV nu procesăm dimensiuni adiționale
+        if (tip !== 'DIV') {
             for (let i = 3; i < parts.length - 1; i += 2) {
                 if (i + 1 < parts.length) {
                     const dimPart = parts[i].trim();
@@ -877,7 +892,7 @@
             
             return entries;
         }
-
+    }
         // Add scanned data to table with color grouping
         function addScannedDataToTable(entries) {
             const tbody = document.getElementById('data-tbody');

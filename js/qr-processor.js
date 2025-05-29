@@ -71,6 +71,37 @@ function populateFormFromQR(qrData) {
     const nume = numeParts.length > 0 ? numeParts.join('_') : productParts[2];
     
     console.log('Componente produs:', { specia, tip, nume, calitate });
+
+    // Pentru DIV, al treilea parametru este volumul, nu bucățile
+            if (tip === 'DIV') {
+                // Ascundem câmpul bucăți și afișăm câmpul volum
+                const bucatiContainer = document.getElementById('bucati')?.parentElement;
+                const volumDivContainer = document.getElementById('volum-div-container');
+                
+                if (bucatiContainer) bucatiContainer.style.display = 'none';
+                if (volumDivContainer) volumDivContainer.style.display = 'block';
+                
+                // Setăm volumul în câmpul dedicat
+                const volumDiv = document.getElementById('volum-div');
+                if (volumDiv) {
+                    // Convertim punct în virgulă pentru afișare
+                    volumDiv.value = mainQuantity.replace('.', ',');
+                }
+                
+                // Golim câmpul bucăți
+                if (bucatiElement) bucatiElement.value = '';
+            } else {
+                // Pentru non-DIV, procesare normală
+                const bucatiContainer = document.getElementById('bucati')?.parentElement;
+                const volumDivContainer = document.getElementById('volum-div-container');
+                
+                if (bucatiContainer) bucatiContainer.style.display = 'block';
+                if (volumDivContainer) volumDivContainer.style.display = 'none';
+                
+                if (bucatiElement && mainQuantity && !isNaN(mainQuantity)) {
+                    bucatiElement.value = mainQuantity;
+                }
+            }
     
     // Parsăm dimensiunea principală
     const dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);

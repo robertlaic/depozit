@@ -645,3 +645,43 @@ button {
 .debug-info.show {
     display: block;
 }
+
+/* Stiluri pentru locație externă */
+input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+#locatie-externa-input {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Stiluri pentru câmpul de volum DIV */
+#volum-div {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+#volum-div:focus {
+    outline: none;
+    border-color: #BD3033;
+    box-shadow: 0 0 0 3px rgba(189, 48, 51, 0.1);
+}
+
+/* Stiluri pentru celule non-editabile în tabel (pentru DIV) */
+.data-table td:not(.editable-cell) {
+    background-color: #f5f5f5;
+    cursor: default;
+    font-style: italic;
+}
+
+/* Container pentru volum DIV */
+#volum-div-container {
+    transition: all 0.3s ease;
+}
