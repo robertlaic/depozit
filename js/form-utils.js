@@ -32,7 +32,7 @@ function updateNumeOptions() {
     } else if (selectedTip === 'SF') {
         const sfOptions = [
             'KVH_C24', 'DUO_C24', 'BSH_GL24h', 'DK', 'ARC', 
-            'Lam_NF', 'Lam_NFA', 'Lam_NFC', 'Lam_NFD', 'Lam_NFF', 
+            'Lam_NF', 'Lam_NFA', 'Lam_NFC', 'Lam_NFD', 'Lam_NFP', 
             'Lam_NFS', 'Lam_D', 'Lam_P', 'PL', 'FRIZ_C24', 'Lam_Duo'
         ];
         
