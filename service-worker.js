@@ -1,5 +1,5 @@
 // Schimbă această versiune ori de câte ori faci modificări importante
-const CACHE_VERSION = 'v1.0';
+const CACHE_VERSION = 'v1.1';
 const CACHE_NAME = 'depozit-etichete-' + CACHE_VERSION;
 
 // Lista tuturor fișierelor care trebuie să fie în cache
