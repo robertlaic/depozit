@@ -104,7 +104,8 @@ function populateFormFromQR(qrData) {
             }
     
     // Parsăm dimensiunea principală
-    const dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);
+    // const dimensionMatch = mainDimension.match(/(\d+)x(\d+)x(\d+)$/);
+    const dimensionMatch = mainDimension.match(/^(\d+)x(\d*)x(\d+)$/);
     if (!dimensionMatch) {
         throw new Error('Format dimensiune invalid: trebuie să fie în formatul LxlxG');
     }

@@ -206,8 +206,10 @@ function generatePreview() {
     }
     
     const mainLabel = `${specia}_${tip}_${nume}_${calitate}`;
-    const mainDimension = `${lungime}x${latime}x${grosime}`;
-    
+    // const mainDimension = `${lungime}x${latime}x${grosime}`;
+    const effectiveLatime = tip === 'DIV' ? '' : latime;
+    const mainDimension   = `${lungime}x${effectiveLatime}x${grosime}`;
+
     const labelContent = document.getElementById('label-content');
     if (labelContent) {
         labelContent.textContent = mainLabel;
