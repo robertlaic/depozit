@@ -234,43 +234,107 @@
     </script>
     <script>
   // Înregistrarea Service Worker
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(registration => {
-          console.log('Service Worker înregistrat cu succes:', registration.scope);
-          
-          // Verificare actualizări
-          registration.addEventListener('updatefound', () => {
-            const newWorker = registration.installing;
-            console.log('Se instalează un nou Service Worker...');
-            
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('Actualizare nouă disponibilă! Reîmprospătează pagina pentru a încărca noua versiune.');
-                
-                // Aici poți afișa o notificare utilizatorului despre actualizare
-                if (confirm('Există o actualizare disponibilă pentru aplicație. Reîmprospătezi acum?')) {
-                  window.location.reload();
-                }
-              }
-            });
-          });
-        })
-        .catch(error => {
-          console.error('Eroare la înregistrarea Service Worker:', error);
-        });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(registration => {
+        console.log('Service Worker înregistrat cu succes:', registration.scope);
         
-      // Verificare periodic pentru actualizări (la fiecare 30 minute)
-      setInterval(() => {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            action: 'checkForUpdates'
+        // Verificare actualizări - VERSIUNE ÎMBUNĂTĂȚITĂ
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('Se instalează un nou Service Worker...');
+          
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('Actualizare nouă disponibilă!');
+              
+              // NU mai forțăm reîncărcarea automată
+              // În schimb, afișăm o notificare discretă
+              showUpdateNotification();
+            }
           });
-        }
-      }, 30 * 60 * 1000);
-    });
+        });
+      })
+      .catch(error => {
+        console.error('Eroare la înregistrarea Service Worker:', error);
+      });
+      
+    // Verificare periodic pentru actualizări (la fiecare 30 minute)
+    setInterval(() => {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          action: 'checkForUpdates'
+        });
+      }
+    }, 30 * 60 * 1000);
+  });
+}
+
+// Funcție pentru a afișa notificarea de actualizare
+function showUpdateNotification() {
+  // Verificăm dacă utilizatorul chiar vrea să actualizeze
+  // Doar dacă confirmă explicit
+  const updateBanner = document.createElement('div');
+  updateBanner.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #4CAF50;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 9999;
+    max-width: 300px;
+    font-size: 14px;
+  `;
+  
+  updateBanner.innerHTML = `
+    <div>Actualizare disponibilă!</div>
+    <button onclick="applyUpdate()" style="
+      background: white;
+      color: #4CAF50;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-top: 8px;
+      cursor: pointer;
+      margin-right: 5px;
+    ">Aplică</button>
+    <button onclick="dismissUpdate()" style="
+      background: transparent;
+      color: white;
+      border: 1px solid white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-top: 8px;
+      cursor: pointer;
+    ">Ignoră</button>
+  `;
+  
+  document.body.appendChild(updateBanner);
+  
+  // Auto-dismiss după 10 secunde
+  setTimeout(() => {
+    if (document.body.contains(updateBanner)) {
+      dismissUpdate();
+    }
+  }, 10000);
+}
+
+function applyUpdate() {
+  // Doar ACUM reîncărcăm, la cererea explicită a utilizatorului
+  window.location.reload();
+}
+
+function dismissUpdate() {
+  const banner = document.querySelector('div[style*="position: fixed"]');
+  if (banner) {
+    banner.remove();
   }
+}
 </script>
 </body>
 </html>
