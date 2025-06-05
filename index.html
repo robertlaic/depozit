@@ -234,14 +234,16 @@
     </script>
     <script>
   // Înregistrarea Service Worker
-
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
+    // Folosește calea relativă pentru GitHub Pages
+    navigator.serviceWorker.register('./service-worker.js', {
+      scope: './' // Important pentru GitHub Pages subdirectory
+    })
       .then(registration => {
         console.log('Service Worker înregistrat cu succes:', registration.scope);
         
-        // Verificare actualizări - VERSIUNE ÎMBUNĂTĂȚITĂ
+        // Gestionare actualizări - VERSIUNE ÎMBUNĂTĂȚITĂ
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           console.log('Se instalează un nou Service Worker...');
@@ -250,8 +252,10 @@ if ('serviceWorker' in navigator) {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               console.log('Actualizare nouă disponibilă!');
               
-              // NU mai forțăm reîncărcarea automată
-              // În schimb, afișăm o notificare discretă
+              // NU mai forțăm reîncărcarea automată - doar logging
+              console.log('Pentru a aplica actualizarea, reîmprospătează manual pagina');
+              
+              // Opțional: afișează o notificare discretă (fără reîncărcare automată)
               showUpdateNotification();
             }
           });
@@ -260,27 +264,17 @@ if ('serviceWorker' in navigator) {
       .catch(error => {
         console.error('Eroare la înregistrarea Service Worker:', error);
       });
-      
-    // Verificare periodic pentru actualizări (la fiecare 30 minute)
-    setInterval(() => {
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.controller.postMessage({
-          action: 'checkForUpdates'
-        });
-      }
-    }, 30 * 60 * 1000);
   });
 }
 
-// Funcție pentru a afișa notificarea de actualizare
+// ===== 3. FUNCȚIE PENTRU NOTIFICARE ACTUALIZARE =====
 function showUpdateNotification() {
-  // Verificăm dacă utilizatorul chiar vrea să actualizeze
-  // Doar dacă confirmă explicit
+  // Notificare discretă, fără reîncărcare forțată
   const updateBanner = document.createElement('div');
   updateBanner.style.cssText = `
     position: fixed;
-    top: 10px;
-    right: 10px;
+    bottom: 20px;
+    right: 20px;
     background: #4CAF50;
     color: white;
     padding: 15px;
@@ -289,52 +283,40 @@ function showUpdateNotification() {
     z-index: 9999;
     max-width: 300px;
     font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   `;
   
   updateBanner.innerHTML = `
-    <div>Actualizare disponibilă!</div>
-    <button onclick="applyUpdate()" style="
+    <div style="margin-bottom: 8px;">🔄 Actualizare disponibilă!</div>
+    <button onclick="window.location.reload()" style="
       background: white;
       color: #4CAF50;
       border: none;
       padding: 5px 10px;
       border-radius: 4px;
-      margin-top: 8px;
       cursor: pointer;
       margin-right: 5px;
-    ">Aplică</button>
-    <button onclick="dismissUpdate()" style="
+    ">Aplică acum</button>
+    <button onclick="this.parentElement.remove()" style="
       background: transparent;
       color: white;
       border: 1px solid white;
       padding: 5px 10px;
       border-radius: 4px;
-      margin-top: 8px;
       cursor: pointer;
-    ">Ignoră</button>
+    ">Mai târziu</button>
   `;
   
   document.body.appendChild(updateBanner);
   
-  // Auto-dismiss după 10 secunde
+  // Auto-remove după 10 secunde
   setTimeout(() => {
     if (document.body.contains(updateBanner)) {
-      dismissUpdate();
+      updateBanner.remove();
     }
   }, 10000);
 }
 
-function applyUpdate() {
-  // Doar ACUM reîncărcăm, la cererea explicită a utilizatorului
-  window.location.reload();
-}
-
-function dismissUpdate() {
-  const banner = document.querySelector('div[style*="position: fixed"]');
-  if (banner) {
-    banner.remove();
-  }
-}
 </script>
 </body>
 </html>
