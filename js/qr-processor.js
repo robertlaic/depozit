@@ -167,7 +167,7 @@ function populateFormFromQR(qrData) {
         
         // Verificăm dacă am ajuns la ultima parte și dacă pare a fi o locație din depozit
         if (i === parts.length - 1) {
-            const locationMatch = currentPart.match(/^([A-G])-(\d+)-(\d+)$/);
+            const locationMatch = currentPart.match(/^([A-H])-(\d+)-(\d+)$/);
             if (locationMatch) {
                 [, perete, coloana, rand] = locationMatch;
                 locationFound = true;
@@ -392,7 +392,7 @@ function processOldFormatQR(qrData) {
         }
     } else {
         // Verifică locația din depozit
-        const locationPattern = /([A-G])-(\d+)-(\d+)$/;
+        const locationPattern = /([A-H])-(\d+)-(\d+)$/;
         const locationMatch = lastLine.match(locationPattern);
         
         if (locationMatch) {
@@ -424,7 +424,7 @@ function processOldFormatQR(qrData) {
         }
         
         // Verifică locație din depozit
-        const separateLocationPattern = /^([A-G])-(\d+)-(\d+)$/;
+        const separateLocationPattern = /^([A-H])-(\d+)-(\d+)$/;
         const separateLocationMatch = currentLine.match(separateLocationPattern);
         
         if (separateLocationMatch) {
@@ -587,7 +587,7 @@ function processOldFormatQR(qrData) {
             
             // Verifică dacă locația nu este atașată la sfârșit
             if (!locationFound && !locatieExterna && i === productParts.length - 1) {
-                const lastPartLocationMatch = partProduct.match(/([A-G])-(\d+)-(\d+)$/);
+                const lastPartLocationMatch = partProduct.match(/([A-H])-(\d+)-(\d+)$/);
                 if (lastPartLocationMatch) {
                     [, perete, coloana, rand] = lastPartLocationMatch;
                     locationFound = true;
@@ -615,7 +615,7 @@ function processOldFormatQR(qrData) {
             console.log(`Dimensiune adițională DIV ${i} detectată dar ignorată:`, { L: partL, G: partG });
         } else if (i === productParts.length - 1 && !locationFound && !locatieExterna) {
             // Ultima parte ar putea conține doar locația
-            const lastPartLocationMatch = part.match(/([A-G])-(\d+)-(\d+)$/);
+            const lastPartLocationMatch = part.match(/([A-H])-(\d+)-(\d+)$/);
             if (lastPartLocationMatch) {
                 [, perete, coloana, rand] = lastPartLocationMatch;
                 locationFound = true;

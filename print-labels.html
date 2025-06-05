@@ -10,17 +10,17 @@
 </head>
 <body>
     <div class="container">
-    <!-- Logo deasupra header-ului -->
-    <div class="logo-container">
-        <img src="ergio.png" alt="" class="company-logo">
-    </div>
-    
-    <!-- Header cu titlul centrat și butonul Back -->
-    <div class="header-section">
-        <h1>Aplicație Tipărire Etichete A4 pentru Depozit</h1>
-        <a href="index.html" class="back-button">← Înapoi la Meniu</a>
-    </div>
+        <!-- Logo deasupra header-ului -->
+        <div class="logo-container">
+            <img src="ergio.png" alt="" class="company-logo">
+        </div>
         
+        <!-- Header cu titlul centrat și butonul Back -->
+        <div class="header-section">
+            <h1>Aplicație Tipărire Etichete A4 pentru Depozit</h1>
+            <a href="index.html" class="back-button">← Înapoi la Meniu</a>
+        </div>
+            
         <div class="form-grid">
             <div class="form-group">
                 <label for="specia">Specia</label>
@@ -82,7 +82,7 @@
                     <option value="THW">THW</option>
                     <option value="FSC">FSC</option>
                     <option value="ARS">ARS</option>
-                	<option value="OPT">OPT</option>
+                    <option value="OPT">OPT</option>
                 </select>
             </div>
         </div>
@@ -102,11 +102,33 @@
                 <label for="bucati">Număr bucăți</label>
                 <input type="number" id="bucati" placeholder="Ex: 467">
             </div>
+        </div>
+
+        <!-- Container pentru volum DIV cu stiluri speciale din CSS -->
+        <div class="form-grid" style="margin-top: 20px;">
             <div class="form-group" id="volum-div-container" style="display: none;">
-                <label for="volum-div">Volum (MC)</label>
+                <label for="volum-div">📊 Volum (MC)</label>
                 <input type="text" id="volum-div" placeholder="Ex: 12,5000" 
                     pattern="[0-9]+([,][0-9]{1,4})?" 
                     title="Introduceți volumul cu maxim 4 zecimale, folosind virgula ca separator">
+                <small>Folosiți virgula ca separator zecimal (ex: 12,5000)</small>
+            </div>
+        </div>
+
+        <!-- Câmpuri specifice pentru DIV cu stiluri din CSS -->
+        <div id="div-fields-container" style="display: none;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="numar-randuri">🔢 Număr rânduri</label>
+                    <input type="number" id="numar-randuri" placeholder="Ex: 5" min="1" max="100">
+                    <small>Numărul de rânduri în stivă</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id-stiva">🏷️ ID stivă</label>
+                    <input type="text" id="id-stiva" placeholder="Ex: ST001" maxlength="10">
+                    <small>Identificator unic pentru stivă</small>
+                </div>
             </div>
         </div>
         
@@ -123,7 +145,7 @@
                         <option value="E">E</option>
                         <option value="F">F</option>
                         <option value="G">G</option>
-                    	<option value="H">H</option>
+                        <option value="H">H</option>
                     </select>
                     <select id="coloana">
                         <option value="">Coloană</option>
@@ -151,13 +173,13 @@
                         <option value="4">4</option>
                     </select>
                 </div>
-             <div class="form-group" style="margin-top: 15px;">
-                <label>
-                    <input type="checkbox" id="locatie-externa" onchange="toggleLocatieExterna()">
-                    Locație externă (nu este în depozit)
-                </label>
-                <input type="text" id="locatie-externa-input" placeholder="Ex: Depozit la gard,..." style="display: none; margin-top: 10px;">
-            </div>   
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>
+                        <input type="checkbox" id="locatie-externa" onchange="toggleLocatieExterna()">
+                        Locație externă (nu este în depozit)
+                    </label>
+                    <input type="text" id="locatie-externa-input" placeholder="Ex: Depozit la gard,..." style="display: none; margin-top: 10px;">
+                </div>   
             </div>
         </div>
         

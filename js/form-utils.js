@@ -59,6 +59,7 @@ function updateNumeOptions() {
     const latimeInput       = document.getElementById('latime');
     const bucatiContainer   = document.getElementById('bucati')?.parentElement;
     const volumDivContainer = document.getElementById('volum-div-container');
+    const divFieldsContainer = document.getElementById('div-fields-container');
 
     if (selectedTip === 'DIV') {
         // 1) ascund doar câmpul Latime
@@ -68,13 +69,15 @@ function updateNumeOptions() {
         // 3) ascund bucăți, arăt volum
         if (bucatiContainer)    bucatiContainer.style.display   = 'none';
         if (volumDivContainer)  volumDivContainer.style.display = 'block';
+        // 4) arăt câmpurile specifice DIV
+        if (divFieldsContainer) divFieldsContainer.style.display = 'block';
         
-        // 4) Dezactivez butonul pentru dimensiuni adiționale
+        // 5) Dezactivez butonul pentru dimensiuni adiționale
         if (typeof toggleAdditionalDimensionsButton === 'function') {
             toggleAdditionalDimensionsButton(false);
         }
         
-        // 5) Golesc lista de dimensiuni adiționale dacă există
+        // 6) Golesc lista de dimensiuni adiționale dacă există
         if (typeof additionalDimensions !== 'undefined') {
             additionalDimensions = [];
             if (typeof renderDimensionsList === 'function') {
@@ -87,6 +90,7 @@ function updateNumeOptions() {
         if (dimsIniLabel)       dimsIniLabel.textContent    = 'Dimensiuni inițiale (L x l x G)';
         if (bucatiContainer)    bucatiContainer.style.display   = '';
         if (volumDivContainer)  volumDivContainer.style.display = 'none';
+        if (divFieldsContainer) divFieldsContainer.style.display = 'none';
         
         // Activez butonul pentru dimensiuni adiționale
         if (typeof toggleAdditionalDimensionsButton === 'function') {
@@ -213,8 +217,7 @@ function renderDimensionsList() {
     });
 }
 
-// Generează previzualizarea etichetei
-// Generează previzualizarea etichetei
+// Generează previzualizarea etichetei - VERSIUNE ACTUALIZATĂ pentru DIV
 function generatePreview() {
     // 1) declarăm imediat checkbox-ul și input-ul pentru locație externă
     const locatieExternaCheckbox = document.getElementById('locatie-externa');
@@ -233,11 +236,15 @@ function generatePreview() {
     const coloana  = document.getElementById('coloana')?.value;
     const rand     = document.getElementById('rand')?.value;
 
+    // Câmpurile noi pentru DIV
+    const numarRanduri = document.getElementById('numar-randuri')?.value;
+    const idStiva = document.getElementById('id-stiva')?.value;
+
     // 3) validare obligatorii
     if (tip === 'DIV') {
         const volumDiv = document.getElementById('volum-div')?.value;
-        if (!specia || !tip || !nume || !calitate || !volumDiv) {
-            showNotification('Pentru DIV, completați toate câmpurile inclusiv Volum!', 'error');
+        if (!specia || !tip || !nume || !calitate || !lungime || !grosime || !volumDiv || !numarRanduri || !idStiva) {
+            showNotification('Pentru DIV, completați toate câmpurile inclusiv Volum, Număr rânduri și ID stivă!', 'error');
             return;
         }
     } else {
@@ -279,9 +286,13 @@ function generatePreview() {
                     const decimals = parts[1] || '';
                     volumFormatted = parts[0] + ',' + decimals.padEnd(4, '0');
                 }
-                dimensionsHTML = `${lungime}x x${grosime} - ${volumFormatted} MC`;
+                
+                // Pentru DIV afișăm și câmpurile noi DEASUPRA dimensiunilor cu font mai mare
+                const divExtraInfo = `<div style="font-size: 56px; line-height: 1.2; color: #FF9800; font-weight: bold; margin-bottom: 20px;">Număr rânduri: ${numarRanduri}<br>ID stivă: ${idStiva}</div>`;
+                dimensionsHTML = divExtraInfo + `${lungime}x x${grosime} - ${volumFormatted} MC`;
             } else {
-                dimensionsHTML = `${lungime}x x${grosime} - 0,0000 MC`;
+                const divExtraInfo = `<div style="font-size: 56px; line-height: 1.2; color: #FF9800; font-weight: bold; margin-bottom: 20px;">Număr rânduri: ${numarRanduri}<br>ID stivă: ${idStiva}</div>`;
+                dimensionsHTML = divExtraInfo + `${lungime}x x${grosime} - 0,0000 MC`;
             }
         } else {
             // Pentru restul: format normal
@@ -304,7 +315,7 @@ function generatePreview() {
     if (qrContainer && typeof QRCode !== 'undefined') {
         qrContainer.innerHTML = '';
         
-        // Format QR optimizat: COD|DIMENSIUNE|BUCATI|DIMENSIUNE2|BUCATI2|...|LOCATIE
+        // Format QR optimizat: COD|DIMENSIUNE|BUCATI/VOLUM|[NUMAR_RANDURI|ID_STIVA]|...|LOCATIE
         let qrParts = [];
         if (tip === 'DIV') {
             const volumDiv = document.getElementById('volum-div')?.value || '0,0000';
@@ -314,7 +325,9 @@ function generatePreview() {
             qrParts = [
                 mainLabel,                  // COD
                 mainDimension,              // DIMENSIUNE în format LxxG pentru DIV
-                volumForQR                  // VOLUM în loc de bucăți
+                volumForQR,                 // VOLUM în loc de bucăți
+                numarRanduri,               // NUMĂR RÂNDURI
+                idStiva                     // ID STIVĂ
             ];
         } else {
             qrParts = [
@@ -387,7 +400,8 @@ function clearForm() {
     const fields = [
         'specia', 'tip', 'nume', 'calitate', 
         'lungime', 'latime', 'grosime', 'bucati',
-        'perete', 'coloana', 'rand'
+        'perete', 'coloana', 'rand', 'volum-div',
+        'numar-randuri', 'id-stiva'
     ];
     
     fields.forEach(fieldId => {
@@ -450,7 +464,7 @@ function printLabel() {
                     body { width: 297mm; height: 210mm; margin: 0; padding: 0; background: white; font-family: Arial, sans-serif; overflow: hidden; }
                     .print-label { width: 297mm; height: 210mm; padding: 40px; position: relative; background: white; }
                     .label-content { font-family: Arial, sans-serif; font-size: 96px; font-weight: bold; line-height: 1.3; }
-                    .label-dimensions { margin-top: 40px; font-size: 72px; line-height: 1.5; }
+                    .label-dimensions { margin-top: 40px; font-size: 68px; line-height: 1.4; }
                     .qr-container { position: absolute; bottom: 100px; right: 40px; border: 2px solid #333; padding: 8px; background: white; }
                     .location-label { position: absolute; bottom: 40px; right: 40px; font-family: Arial, sans-serif; font-size: 24px; font-weight: bold; color: #333; background: white; padding: 10px; border: 2px solid #333; min-width: 200px; }
                 </style>
@@ -724,6 +738,7 @@ window.addDimension = addDimension;
 window.removeDimension = removeDimension;
 window.updateDimension = updateDimension;
 window.toggleAdditionalDimensionsButton = toggleAdditionalDimensionsButton;
+window.toggleLocatieExterna = toggleLocatieExterna;
 window.generatePreview = generatePreview;
 window.clearForm = clearForm;
 window.printLabel = printLabel;
