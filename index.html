@@ -218,105 +218,158 @@
 
         function loadPrintPage() {
             showLoading();
-            // Simulăm încărcarea pentru demo - în realitate se va redirecționa către pagina de tipărire
             setTimeout(() => {
-                window.location.href = 'print-labels.html';
+                window.location.href = './print-labels.html';
             }, 500);
         }
 
         function loadScanPage() {
             showLoading();
-            // Simulăm încărcarea pentru demo - în realitate se va redirecționa către pagina de scanare
             setTimeout(() => {
-                window.location.href = 'scan-labels.html';
+                window.location.href = './scan-labels.html';
             }, 500);
         }
-    </script>
-    <script>
-//   // Înregistrarea Service Worker
-// if ('serviceWorker' in navigator) {
-//   window.addEventListener('load', () => {
-//     // Folosește calea relativă pentru GitHub Pages
-//     navigator.serviceWorker.register('./service-worker.js', {
-//       scope: './' // Important pentru GitHub Pages subdirectory
-//     })
-//       .then(registration => {
-//         console.log('Service Worker înregistrat cu succes:', registration.scope);
+
+        // === SOLUȚIA PENTRU REFRESH AUTOMAT LA BACK ===
         
-//         // Gestionare actualizări - VERSIUNE ÎMBUNĂTĂȚITĂ
-//         registration.addEventListener('updatefound', () => {
-//           const newWorker = registration.installing;
-//           console.log('Se instalează un nou Service Worker...');
-          
-//           newWorker.addEventListener('statechange', () => {
-//             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-//               console.log('Actualizare nouă disponibilă!');
-              
-//               // NU mai forțăm reîncărcarea automată - doar logging
-//               console.log('Pentru a aplica actualizarea, reîmprospătează manual pagina');
-              
-//               // Opțional: afișează o notificare discretă (fără reîncărcare automată)
-//               showUpdateNotification();
-//             }
-//           });
-//         });
-//       })
-//       .catch(error => {
-//         console.error('Eroare la înregistrarea Service Worker:', error);
-//       });
-//   });
-// }
+        // Detectează când utilizatorul se întoarce cu Back
+        window.addEventListener('pageshow', function(event) {
+            console.log('Pageshow event - persisted:', event.persisted);
+            
+            // Ascunde loading-ul în orice caz
+            const loading = document.getElementById('loading');
+            if (loading) {
+                loading.style.display = 'none';
+            }
+            
+            // Dacă pagina vine din cache (Back button), forțează refresh
+            if (event.persisted) {
+                console.log('Pagina încărcată din cache - forțez refresh');
+                window.location.reload();
+            }
+        });
 
-// // ===== 3. FUNCȚIE PENTRU NOTIFICARE ACTUALIZARE =====
-// function showUpdateNotification() {
-//   // Notificare discretă, fără reîncărcare forțată
-//   const updateBanner = document.createElement('div');
-//   updateBanner.style.cssText = `
-//     position: fixed;
-//     bottom: 20px;
-//     right: 20px;
-//     background: #4CAF50;
-//     color: white;
-//     padding: 15px;
-//     border-radius: 8px;
-//     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-//     z-index: 9999;
-//     max-width: 300px;
-//     font-size: 14px;
-//     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-//   `;
-  
-//   updateBanner.innerHTML = `
-//     <div style="margin-bottom: 8px;">🔄 Actualizare disponibilă!</div>
-//     <button onclick="window.location.reload()" style="
-//       background: white;
-//       color: #4CAF50;
-//       border: none;
-//       padding: 5px 10px;
-//       border-radius: 4px;
-//       cursor: pointer;
-//       margin-right: 5px;
-//     ">Aplică acum</button>
-//     <button onclick="this.parentElement.remove()" style="
-//       background: transparent;
-//       color: white;
-//       border: 1px solid white;
-//       padding: 5px 10px;
-//       border-radius: 4px;
-//       cursor: pointer;
-//     ">Mai târziu</button>
-//   `;
-  
-//   document.body.appendChild(updateBanner);
-  
-//   // Auto-remove după 10 secunde
-//   setTimeout(() => {
-//     if (document.body.contains(updateBanner)) {
-//       updateBanner.remove();
-//     }
-//   }, 10000);
-// }
+        // Handler alternativ pentru popstate (Back/Forward)
+        window.addEventListener('popstate', function(event) {
+            console.log('Popstate event detectat - probabil Back button');
+            
+            // Verifică dacă suntem pe pagina index
+            if (window.location.pathname.includes('index.html') || 
+                window.location.pathname.endsWith('/depozit/')) {
+                
+                console.log('Pe pagina index - forțez refresh');
+                window.location.reload();
+            }
+        });
 
-</script>
+        // Detectează navigation timing pentru a forța refresh la revenire
+        window.addEventListener('load', function() {
+            // Verifică dacă a fost o navigare înapoi
+            if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+                console.log('Detectată navigare Back/Forward - refresh în 100ms');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
+            }
+        });
+
+        // Adaugă un marker în sessionStorage pentru a detecta revenirea
+        window.addEventListener('beforeunload', function() {
+            sessionStorage.setItem('wasOnIndexPage', 'true');
+        });
+
+        // Verifică marker-ul la încărcare
+        window.addEventListener('DOMContentLoaded', function() {
+            if (sessionStorage.getItem('wasOnIndexPage') === 'true') {
+                sessionStorage.removeItem('wasOnIndexPage');
+                
+                // Verifică dacă pare o revenire din altă pagină
+                const referrer = document.referrer;
+                if (referrer && (referrer.includes('print-labels.html') || referrer.includes('scan-labels.html'))) {
+                    console.log('Detectată revenire din:', referrer, '- forțez refresh');
+                    window.location.reload();
+                }
+            }
+        });
+    </script>
+
+    <!-- SERVICE WORKER REACTIVAT cu configurare corectă -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js', {
+                    scope: './'
+                })
+                .then(registration => {
+                    console.log('Service Worker înregistrat cu succes:', registration.scope);
+                    
+                    // Gestionare actualizări fără refresh automat
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        console.log('Se instalează un nou Service Worker...');
+                        
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                console.log('Actualizare nouă disponibilă!');
+                                // NU forțăm refresh automat pentru actualizări
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Eroare la înregistrarea Service Worker:', error);
+                });
+            });
+        }
+
+        // Funcție pentru notificare actualizare (opțională)
+        function showUpdateNotification() {
+            const updateBanner = document.createElement('div');
+            updateBanner.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #4CAF50;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 9999;
+                max-width: 300px;
+                font-size: 14px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            `;
+            
+            updateBanner.innerHTML = `
+                <div style="margin-bottom: 8px;">🔄 Actualizare disponibilă!</div>
+                <button onclick="window.location.reload()" style="
+                    background: white;
+                    color: #4CAF50;
+                    border: none;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin-right: 5px;
+                ">Aplică acum</button>
+                <button onclick="this.parentElement.remove()" style="
+                    background: transparent;
+                    color: white;
+                    border: 1px solid white;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                ">Mai târziu</button>
+            `;
+            
+            document.body.appendChild(updateBanner);
+            
+            setTimeout(() => {
+                if (document.body.contains(updateBanner)) {
+                    updateBanner.remove();
+                }
+            }, 10000);
+        }
+    </script>
 </body>
 </html>

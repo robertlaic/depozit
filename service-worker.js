@@ -1,11 +1,12 @@
-// Schimbă această versiune ori de câte ori faci modificări importante
-const CACHE_VERSION = 'v1.2';
+// service-worker.js - VERSIUNE CORECTATĂ pentru GitHub Pages
+
+const CACHE_VERSION = 'v1.3'; // Mărește versiunea
 const CACHE_NAME = 'depozit-etichete-' + CACHE_VERSION;
 
-// Lista tuturor fișierelor care trebuie să fie în cache
+// URL-uri RELATIVE pentru GitHub Pages (cu ./ în loc de /)
 const urlsToCache = [
-  './',              // în loc de '/'
-  './index.html',    // în loc de '/index.html'
+  './',                    // în loc de '/'
+  './index.html',          // în loc de '/index.html'
   './print-labels.html',
   './scan-labels.html',
   './styles.css',
@@ -20,27 +21,28 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'
 ];
 
-// Instalarea Service Worker și cache-ul fișierelor inițiale
+// Instalarea Service Worker
 self.addEventListener('install', event => {
-  console.log('[Service Worker] Instalare...');
+  console.log('[Service Worker] Instalare versiunea:', CACHE_VERSION);
   
-  // Forțează noul service worker să devină activ imediat
   self.skipWaiting();
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[Service Worker] Cache deschis');
+        console.log('[Service Worker] Cache deschis:', CACHE_NAME);
         return cache.addAll(urlsToCache);
+      })
+      .catch(error => {
+        console.error('[Service Worker] Eroare la cache.addAll:', error);
       })
   );
 });
 
-// Activarea Service Worker și ștergerea cache-urilor vechi
+// Activarea Service Worker
 self.addEventListener('activate', event => {
-  console.log('[Service Worker] Activare...');
+  console.log('[Service Worker] Activare versiunea:', CACHE_VERSION);
   
-  // Preia controlul imediat al paginilor
   self.clients.claim();
   
   event.waitUntil(
@@ -57,42 +59,58 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Interceptarea request-urilor pentru a servi din cache sau fetch network
+// Interceptarea request-urilor
 self.addEventListener('fetch', event => {
+  // Ignoră request-urile non-GET
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  // Ignoră request-urile către alte domenii (API-uri externe)
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+  
   event.respondWith(
-    // Verificăm dacă request-ul este în cache
     caches.match(event.request)
       .then(response => {
-        // Cache hit - returnăm răspunsul din cache
+        // Dacă avem în cache, returnează
         if (response) {
+          console.log('[Service Worker] Servit din cache:', event.request.url);
           return response;
         }
         
-        // Nu e în cache, facem fetch de la network
+        // Altfel, fetch de la network
         return fetch(event.request)
           .then(networkResponse => {
-            // Verificăm dacă avem un răspuns valid
+            // Verifică dacă răspunsul e valid
             if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
               return networkResponse;
             }
             
-            // Clonăm răspunsul pentru a-l stoca în cache
-            // (pentru că răspunsul poate fi folosit doar o dată)
-            var responseToCache = networkResponse.clone();
+            // Clonează și stochează în cache
+            const responseToCache = networkResponse.clone();
             
-            // Adăugăm răspunsul în cache pentru viitoare accesări
             caches.open(CACHE_NAME)
               .then(cache => {
+                console.log('[Service Worker] Adăugat în cache:', event.request.url);
                 cache.put(event.request, responseToCache);
               });
               
             return networkResponse;
+          })
+          .catch(error => {
+            console.error('[Service Worker] Fetch error pentru:', event.request.url, error);
+            // Returnează o pagină de fallback dacă e disponibilă
+            if (event.request.destination === 'document') {
+              return caches.match('./index.html');
+            }
           });
       })
   );
 });
 
-// Adăugăm un event listener pentru mesaje de la pagină
+// Mesaje de la pagină
 self.addEventListener('message', event => {
   if (event.data.action === 'skipWaiting') {
     self.skipWaiting();
@@ -100,11 +118,6 @@ self.addEventListener('message', event => {
   
   if (event.data.action === 'checkForUpdates') {
     console.log('[Service Worker] Verificare actualizări...');
-    // Forțează reîncărcarea cache-ului
-    caches.delete(CACHE_NAME).then(() => {
-      caches.open(CACHE_NAME).then(cache => {
-        cache.addAll(urlsToCache);
-      });
-    });
+    // Poți adăuga logică pentru verificarea actualizărilor
   }
 });
