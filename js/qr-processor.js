@@ -45,12 +45,12 @@ function populateFormFromQR(qrData) {
     console.log('Părți separate:', parts);
     
     if (parts.length < 3) {
-        throw new Error('Format QR invalid: sunt necesare minim cod produs, dimensiune și bucăți');
+        throw new Error('Format QR invalid: sunt necesare minim cod produs, dimensiune și bucăți/volum');
     }
     
     // Extragem informațiile de bază
-    const productCode = parts[0].trim();      // Cod produs (R_DIM_C24_PL)
-    const mainDimension = parts[1].trim();    // Dimensiune principală (50000x600x80 sau 9000xx43)
+    const productCode = parts[0].trim();      // Cod produs (R_DIV_C24_PL)
+    const mainDimension = parts[1].trim();    // Dimensiune principală (50000xx80)
     const mainQuantity = parts[2].trim();     // Bucăți pentru dimensiunea principală sau volum pentru DIV
     
     console.log('Cod produs:', productCode);
@@ -72,20 +72,48 @@ function populateFormFromQR(qrData) {
     
     console.log('Componente produs:', { specia, tip, nume, calitate });
 
-    // Pentru DIV, al treilea parametru este volumul, nu bucățile
+    // IMPORTANT: Pentru DIV, extragem câmpurile suplimentare din QR
+    let numarRanduri = '';
+    let idStiva = '';
+    
     if (tip === 'DIV') {
+        // Pentru DIV, verificăm dacă avem suficiente părți pentru câmpurile suplimentare
+        if (parts.length >= 5) {
+            numarRanduri = parts[3].trim();  // Al patrulea element este numărul de rânduri
+            idStiva = parts[4].trim();       // Al cincilea element este ID-ul stivei
+            console.log('Câmpuri DIV extrase din QR:', { numarRanduri, idStiva });
+        } else {
+            console.warn('QR pentru DIV nu conține suficiente părți pentru câmpurile suplimentare');
+        }
+        
         // Ascundem câmpul bucăți și afișăm câmpul volum
         const bucatiContainer = document.getElementById('bucati')?.parentElement;
         const volumDivContainer = document.getElementById('volum-div-container');
+        const divFieldsContainer = document.getElementById('div-fields-container');
         
         if (bucatiContainer) bucatiContainer.style.display = 'none';
         if (volumDivContainer) volumDivContainer.style.display = 'block';
+        if (divFieldsContainer) divFieldsContainer.style.display = 'block';
         
         // Setăm volumul în câmpul dedicat
         const volumDiv = document.getElementById('volum-div');
         if (volumDiv) {
             // Convertim punct în virgulă pentru afișare
             volumDiv.value = mainQuantity.replace('.', ',');
+        }
+        
+        // IMPORTANT: Setăm câmpurile specifice DIV
+        const numarRanduriElement = document.getElementById('numar-randuri');
+        const idStivaElement = document.getElementById('id-stiva');
+        
+        if (numarRanduriElement && numarRanduri) {
+            numarRanduriElement.value = numarRanduri;
+            console.log('Număr rânduri setat în formular:', numarRanduri);
+        }
+        
+        if (idStivaElement && idStiva) {
+            idStivaElement.value = idStiva;
+            console.log('ID stivă setat în formular:', idStiva);
         }
         
         // Golim câmpul bucăți
@@ -95,9 +123,11 @@ function populateFormFromQR(qrData) {
         // Pentru non-DIV, procesare normală
         const bucatiContainer = document.getElementById('bucati')?.parentElement;
         const volumDivContainer = document.getElementById('volum-div-container');
+        const divFieldsContainer = document.getElementById('div-fields-container');
         
         if (bucatiContainer) bucatiContainer.style.display = 'block';
         if (volumDivContainer) volumDivContainer.style.display = 'none';
+        if (divFieldsContainer) divFieldsContainer.style.display = 'none';
         
         const bucatiElement = document.getElementById('bucati');
         if (bucatiElement && mainQuantity && !isNaN(mainQuantity)) {
@@ -144,17 +174,19 @@ function populateFormFromQR(qrData) {
     const [, lungime, latime, grosime] = dimensionMatch;
     console.log('Dimensiuni extrase:', { lungime, latime, grosime });
     
-    // Extragem dimensiunile adiționale
+    // Extragem dimensiunile adiționale și locația
     const additionalDims = [];
     
     // Parcurgem părțile rămase pentru a extrage dimensiunile adiționale și locația
-    // Începem de la index 3 (după cod produs, dimensiune principală și bucăți)
+    // Pentru DIV, începem de la index 5 (după cod produs, dimensiune, volum, număr rânduri, ID stivă)
+    // Pentru non-DIV, începem de la index 3 (după cod produs, dimensiune principală și bucăți)
+    const startIndex = tip === 'DIV' ? 5 : 3;
     let locationFound = false;
     let perete = '', coloana = '', rand = '';
     let locatieExterna = false;
     let textLocatieExterna = '';
     
-    for (let i = 3; i < parts.length; i++) {
+    for (let i = startIndex; i < parts.length; i++) {
         const currentPart = parts[i].trim();
         
         // Verificăm dacă este o locație externă
@@ -560,6 +592,36 @@ function processOldFormatQR(qrData) {
         throw new Error(`Componente lipsă: ${JSON.stringify({ specia, tip, calitate })}`);
     }
     
+    // IMPORTANT: Pentru format vechi DIV, căutăm câmpurile suplimentare în productParts
+    let numarRanduri = '';
+    let idStiva = '';
+    
+    if (tip === 'DIV') {
+        // În formatul vechi, căutăm câmpurile DIV în productParts după volum
+        for (let i = 1; i < productParts.length; i++) {
+            const part = productParts[i].trim();
+            
+            // Sărim peste locații
+            if (part.match(/^([A-H])-(\d+)-(\d+)$/) || part.startsWith('EXT:')) {
+                continue;
+            }
+            
+            // Primul număr valid după volum ar putea fi numărul de rânduri
+            if (!numarRanduri && /^\d+$/.test(part)) {
+                numarRanduri = part;
+                console.log('Număr rânduri găsit în format vechi:', numarRanduri);
+                continue;
+            }
+            
+            // Al doilea text ar putea fi ID-ul stivei
+            if (!idStiva && part.length > 0 && !/^\d+$/.test(part) && !part.includes('x')) {
+                idStiva = part;
+                console.log('ID stivă găsit în format vechi:', idStiva);
+                continue;
+            }
+        }
+    }
+    
     // Extragem dimensiunile adiționale din celelalte părți
     const additionalDims = [];
     
@@ -567,6 +629,11 @@ function processOldFormatQR(qrData) {
     for (let i = 1; i < productParts.length; i++) {
         const part = productParts[i].trim();
         if (!part) continue;
+        
+        // Sărim peste câmpurile DIV deja procesate
+        if (tip === 'DIV' && (part === numarRanduri || part === idStiva)) {
+            continue;
+        }
         
         // Extrage bucățile de la început (de ex: "444R_SF_...")
         let partBucati = '';
@@ -666,6 +733,13 @@ function processOldFormatQR(qrData) {
         // Pentru DIV, verificăm dacă avem o valoare de volum în QR
         // Volumul poate fi în bucatiPart sau într-o altă parte
         const volumDiv = document.getElementById('volum-div');
+        const divFieldsContainer = document.getElementById('div-fields-container');
+        const numarRanduriElement = document.getElementById('numar-randuri');
+        const idStivaElement = document.getElementById('id-stiva');
+        
+        // Afișăm containerele DIV
+        if (divFieldsContainer) divFieldsContainer.style.display = 'block';
+        
         if (volumDiv) {
             // Încercăm să extragem volumul (verificăm dacă bucatiPart conține un număr cu punct sau virgulă)
             let volumValue = bucatiPart;
@@ -674,7 +748,7 @@ function processOldFormatQR(qrData) {
             if (!volumValue || !/^[\d,.]+$/.test(volumValue)) {
                 for (let i = 1; i < productParts.length; i++) {
                     const part = productParts[i].trim();
-                    if (/^[\d,.]+$/.test(part)) {
+                    if (/^[\d,.]+$/.test(part) && part !== numarRanduri) {
                         volumValue = part;
                         break;
                     }
@@ -684,12 +758,23 @@ function processOldFormatQR(qrData) {
             // Formatăm volumul pentru afișare
             if (volumValue && /^[\d,.]+$/.test(volumValue)) {
                 volumDiv.value = volumValue.replace('.', ',');
-                console.log('Volum setat pentru DIV:', volumValue);
+                console.log('Volum setat pentru DIV (format vechi):', volumValue);
             } else {
                 // Valoare implicită dacă nu găsim un volum valid
                 volumDiv.value = '0,0000';
                 console.log('Nu s-a găsit volum valid pentru DIV, se folosește valoarea implicită');
             }
+        }
+        
+        // IMPORTANT: Setăm câmpurile specifice DIV din format vechi
+        if (numarRanduriElement && numarRanduri) {
+            numarRanduriElement.value = numarRanduri;
+            console.log('Număr rânduri setat în formular (format vechi):', numarRanduri);
+        }
+        
+        if (idStivaElement && idStiva) {
+            idStivaElement.value = idStiva;
+            console.log('ID stivă setat în formular (format vechi):', idStiva);
         }
     } else if (bucatiElement && bucatiPart && !isNaN(bucatiPart)) {
         bucatiElement.value = bucatiPart;

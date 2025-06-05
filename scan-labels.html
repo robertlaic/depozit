@@ -851,7 +851,7 @@ function processQRForSheets(qrData) {
         locatie = lastPart; // Păstrăm formatul complet pentru identificare
     } else {
         // Sau verificăm dacă avem o locație de depozit standard
-        const locationMatch = lastPart.match(/([A-G])-(\d+)-(\d+)$/);
+        const locationMatch = lastPart.match(/([A-H])-(\d+)-(\d+)$/);
         if (locationMatch) {
             locatie = lastPart;
         }
