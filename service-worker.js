@@ -5,8 +5,8 @@ const CACHE_NAME = 'depozit-etichete-' + CACHE_VERSION;
 
 // URL-uri RELATIVE pentru GitHub Pages (cu ./ în loc de /)
 const urlsToCache = [
-  './',                    // în loc de '/'
-  './index.html',          // în loc de '/index.html'
+  './',                    
+  './index.html',          
   './print-labels.html',
   './scan-labels.html',
   './styles.css',
