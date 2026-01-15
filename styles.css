@@ -797,3 +797,358 @@ input[type="checkbox"] {
     cursor: default;
     font-style: italic;
 }
+
+
+/* ============================================ */
+/* STILURI PENTRU ETICHETE PRIMARE */
+/* ============================================ */
+
+/* Buton portocaliu pentru etichete primare în index.html */
+.btn-primary-labels {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-primary-labels:hover {
+    background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(255, 152, 0, 0.4);
+}
+
+/* Secțiune informații */
+.info-section {
+    background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+    border: 2px solid #FF9800;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.info-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.info-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #555;
+}
+
+.info-value {
+    font-size: 36px;
+    font-weight: bold;
+    color: #FF9800;
+    background: white;
+    padding: 10px 30px;
+    border-radius: 8px;
+    border: 2px solid #FF9800;
+    min-width: 100px;
+    text-align: center;
+}
+
+.info-description {
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    font-style: italic;
+}
+
+/* Secțiune formular */
+.form-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid #e0e0e0;
+}
+
+.primary-input-group {
+    margin-bottom: 25px;
+}
+
+.primary-input-group label {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+    text-transform: none;
+}
+
+.primary-input {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.primary-input:focus {
+    outline: none;
+    border-color: #FF9800;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+.primary-input::placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+/* Grup de butoane */
+.button-group {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.button-group .btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 15px 25px;
+    font-size: 16px;
+}
+
+/* Container pentru preview etichete (ecran) */
+.labels-preview-container {
+    display: none;
+    margin-top: 30px;
+    border: 2px dashed #ccc;
+    border-radius: 12px;
+    padding: 20px;
+    background: #f9f9f9;
+}
+
+/* Etichetă primară A4 landscape - pentru preview pe ecran */
+.primary-label {
+    width: 297mm;
+    height: 210mm;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    page-break-after: always;
+    page-break-inside: avoid;
+    font-family: 'Verdana', sans-serif;
+    color: #000000;
+    padding: 5%;
+    margin-bottom: 30px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    /* Scale down pentru preview pe ecran (50%) */
+    transform: scale(0.5);
+    transform-origin: top center;
+}
+
+.primary-label:last-child {
+    page-break-after: auto;
+    margin-bottom: 0;
+}
+
+/* Rând 1: "STIVA NR. :" */
+.label-line1 {
+    font-size: 140px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    color: #000000;
+}
+
+/* Rând 2: Număr */
+.label-line2 {
+    font-size: 180px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    margin-top: 20px;
+    color: #000000;
+}
+
+/* Loader overlay */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #FF9800;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    color: white;
+    font-size: 18px;
+    margin-top: 20px;
+    font-weight: 600;
+}
+
+/* Notificări */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(400px);
+    transition: all 0.3s ease;
+    max-width: 400px;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notification-success {
+    background: #4CAF50;
+    color: white;
+}
+
+.notification-error {
+    background: #f44336;
+    color: white;
+}
+
+.notification-warning {
+    background: #FF9800;
+    color: white;
+}
+
+.notification-info {
+    background: #2196F3;
+    color: white;
+}
+
+/* Print media query pentru etichete primare */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+
+    /* Ascunde tot ce nu e etichetă */
+    .header-section,
+    .info-section,
+    .form-section,
+    .button-group,
+    .logo-container,
+    .btn,
+    input,
+    select,
+    .notification,
+    .loader-overlay {
+        display: none !important;
+    }
+
+    /* Afișează doar containerul cu etichete */
+    .labels-preview-container {
+        display: block !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+    }
+
+    .primary-label {
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        /* Full size la print (100%) */
+        transform: scale(1) !important;
+        width: 297mm !important;
+        height: 210mm !important;
+        padding: 5% !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+    }
+
+    .primary-label:last-child {
+        page-break-after: auto !important;
+    }
+
+    /* Asigură că textul este negru și la size corect */
+    .label-line1,
+    .label-line2 {
+        color: #000000 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+/* Responsive pentru mobile */
+@media screen and (max-width: 768px) {
+    .info-box {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .info-value {
+        font-size: 28px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .button-group .btn {
+        width: 100%;
+        min-width: auto;
+    }
+
+    .primary-label {
+        /* Scale down mai mult pe mobile pentru preview */
+        transform: scale(0.3);
+    }
+
+    .label-line1 {
+        font-size: 120px;
+    }
+
+    .label-line2 {
+        font-size: 160px;
+    }
+}

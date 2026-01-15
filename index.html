@@ -96,6 +96,12 @@
             box-shadow: 0 8px 25px rgba(76, 175, 80, 0.3);
         }
 
+        .btn-primary-labels {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 152, 0, 0.3);
+        }
+
         .main-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
@@ -107,6 +113,10 @@
 
         .btn-scan:hover {
             box-shadow: 0 15px 35px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-primary-labels:hover {
+            box-shadow: 0 15px 35px rgba(255, 152, 0, 0.4);
         }
 
         .button-icon {
@@ -195,7 +205,13 @@
                 Tipărire Etichete
                 <span class="button-description">Creează și tipărește etichete noi pentru produse</span>
             </button>
-            
+
+            <button class="main-button btn-primary-labels" onclick="loadPrimaryLabelsPage()">
+                <span class="button-icon">📦</span>
+                Tipărire Etichete Primare
+                <span class="button-description">Tipărește etichete primare numerotate pentru stive</span>
+            </button>
+
             <button class="main-button btn-scan" onclick="loadScanPage()">
                 <span class="button-icon">📊</span>
                 Scanare Etichete
@@ -220,6 +236,13 @@
             showLoading();
             setTimeout(() => {
                 window.location.href = './print-labels.html';
+            }, 500);
+        }
+
+        function loadPrimaryLabelsPage() {
+            showLoading();
+            setTimeout(() => {
+                window.location.href = './print-primary-labels.html';
             }, 500);
         }
 
@@ -285,7 +308,7 @@
                 
                 // Verifică dacă pare o revenire din altă pagină
                 const referrer = document.referrer;
-                if (referrer && (referrer.includes('print-labels.html') || referrer.includes('scan-labels.html'))) {
+                if (referrer && (referrer.includes('print-labels.html') || referrer.includes('scan-labels.html') || referrer.includes('print-primary-labels.html'))) {
                     console.log('Detectată revenire din:', referrer, '- forțez refresh');
                     window.location.reload();
                 }

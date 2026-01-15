@@ -1,14 +1,15 @@
 // service-worker.js - VERSIUNE CORECTATĂ pentru GitHub Pages
 
-const CACHE_VERSION = 'v1.3'; // Mărește versiunea
+const CACHE_VERSION = 'v1.4'; // Incrementat pentru noua funcționalitate de etichete primare
 const CACHE_NAME = 'depozit-etichete-' + CACHE_VERSION;
 
 // URL-uri RELATIVE pentru GitHub Pages (cu ./ în loc de /)
 const urlsToCache = [
-  './',                    
-  './index.html',          
+  './',
+  './index.html',
   './print-labels.html',
   './scan-labels.html',
+  './print-primary-labels.html',  // NOU - Pagina pentru etichete primare
   './styles.css',
   './js/form-utils.js',
   './js/camera-scanner.js',
@@ -16,6 +17,7 @@ const urlsToCache = [
   './js/gryphon-scanner.js',
   './js/keyboard-shortcuts-simple.js',
   './js/main.js',
+  './js/primary-labels.js',       // NOU - JavaScript pentru etichete primare
   './ergio.png',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
   'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'

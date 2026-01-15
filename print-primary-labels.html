@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tipărire Etichete Primare - Depozit Ergio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Logo deasupra header-ului -->
+        <div class="logo-container">
+            <img src="ergio.png" alt="" class="company-logo">
+        </div>
+
+        <!-- Header cu titlul centrat și butonul Back -->
+        <div class="header-section">
+            <h1>Tipărire Etichete Primare</h1>
+            <a href="index.html" class="back-button">← Înapoi la Meniu</a>
+        </div>
+
+        <!-- Secțiune informații -->
+        <div class="info-section">
+            <div class="info-box">
+                <div class="info-label">Ultimul număr folosit:</div>
+                <div class="info-value" id="last-number-display">1</div>
+            </div>
+            <div class="info-description">
+                Numerotarea etichetelor primare este sincronizată între toate device-urile din rețea.
+            </div>
+        </div>
+
+        <!-- Formular simplu -->
+        <div class="form-section">
+            <div class="form-group primary-input-group">
+                <label for="label-count">Câte etichete doriți să tipăriți?</label>
+                <input
+                    type="number"
+                    id="label-count"
+                    placeholder="Introduceți numărul de etichete (1-100)"
+                    min="1"
+                    max="100"
+                    class="primary-input"
+                    autofocus
+                >
+            </div>
+
+            <!-- Butoane de acțiune -->
+            <div class="button-group">
+                <button
+                    id="generate-btn"
+                    class="btn btn-primary"
+                    title="Generează previzualizarea etichetelor"
+                >
+                    <span class="btn-icon">👁️</span>
+                    <span class="btn-text">Generează Preview</span>
+                </button>
+
+                <button
+                    id="print-btn"
+                    class="btn btn-scanner"
+                    disabled
+                    title="Tipărește etichetele generate"
+                >
+                    <span class="btn-icon">🖨️</span>
+                    <span class="btn-text">Tipărește</span>
+                </button>
+
+                <button
+                    id="clear-btn"
+                    class="btn btn-secondary"
+                    title="Șterge datele și resetează formularul"
+                >
+                    <span class="btn-icon">🗑️</span>
+                    <span class="btn-text">Șterge Date</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Container pentru preview etichete -->
+        <div id="labels-preview-container" class="labels-preview-container">
+            <!-- Etichetele generate vor fi adăugate aici prin JavaScript -->
+        </div>
+
+        <!-- Loader overlay -->
+        <div id="loader" class="loader-overlay" style="display: none;">
+            <div class="spinner"></div>
+            <div class="loader-text">Se încarcă...</div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/primary-labels.js"></script>
+</body>
+</html>
