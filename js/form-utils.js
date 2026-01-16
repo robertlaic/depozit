@@ -485,174 +485,110 @@ function printLabel() {
     }
 }
 
-// Funcția pentru trimiterea datelor în Google Sheets - VERSIUNE DEBUG
+// Funcția pentru trimiterea datelor în Google Sheets - VERSIUNE CORECTATĂ
 async function sendToGoogleSheets(scannedData) {
-    // Configurație Google Apps Script
-    const SCRIPT_ID = '1OGXPyimVPBpGCHCC9-qfjGM5lZ0cB-mQh8KDpme8waYyxbT-gJa5qpOC';
-    const SCRIPT_URL = `https://script.google.com/macros/s/${SCRIPT_ID}/exec`;
-    
-    console.log('🔍 DEBUG: Începe trimiterea datelor');
-    console.log('📊 Date de trimis:', scannedData);
-    console.log('🌐 URL Script:', SCRIPT_URL);
-    
+    // URL-ul corect pentru Google Apps Script (același cu primary-labels)
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
+
+    console.log('DEBUG: Începe trimiterea datelor');
+    console.log('Date de trimis:', scannedData);
+
     if (!scannedData || scannedData.length === 0) {
         throw new Error('Nu există date de trimis');
     }
-    
+
     try {
-        // Formatează datele pentru Google Sheets
-        const formattedData = scannedData.map(row => ({
-            cod: row.cod || '',
-            tip: row.tip || '',
-            lungime: row.lungime || 0,
-            latime: row.latime || 0,
-            grosime: row.grosime || 0,
-            nr_buc: row.nr_buc || 0,
-            volum: row.volum || '0.000000',
-            calitate: row.calitate || '',
-            furnizor: '', // Mereu gol conform cerințelor
-            data: row.data || new Date().toLocaleDateString('ro-RO'),
-            id_prod: '', // Mereu gol conform cerințelor
-            specia: row.specia || '',
-            nume: row.nume || '',
-            bon_consum: '', // Mereu gol conform cerințelor
-            locatie: row.locatie || ''
-        }));
-        
-        console.log('✅ Date formatate:', formattedData);
-        
-        // Preparare date pentru request
+        // Formatează datele ca array de arrays pentru Google Sheets
+        // Ordinea coloanelor: Cod, TIP, LUNGIME, LATIME, GROSIME, NR.BUC, VOLUM, CALITATE, FURNIZOR, DATA, ID_PROD, SPECIA, NUME, BON CONSUM, LOCATIE
+        const formattedValues = scannedData.map(row => [
+            row.cod || '',                                          // Cod
+            row.tip || '',                                          // TIP
+            row.lungime || 0,                                       // LUNGIME
+            row.latime || 0,                                        // LATIME
+            row.grosime || 0,                                       // GROSIME
+            row.nr_buc || 0,                                        // NR.BUC
+            row.volum || 0,                                         // VOLUM
+            row.calitate || '',                                     // CALITATE
+            row.furnizor || '',                                     // FURNIZOR
+            row.data || new Date().toLocaleDateString('ro-RO'),     // DATA
+            row.id_prod || '',                                      // ID_PROD
+            row.specia || '',                                       // SPECIA
+            row.nume || '',                                         // NUME
+            row.bon_consum || '',                                   // BON CONSUM
+            row.locatie || ''                                       // LOCATIE
+        ]);
+
+        console.log('Date formatate ca arrays:', formattedValues);
+
+        // Preparare date pentru request - folosim action: 'appendRows' și values
         const requestData = {
-            action: 'addRows',
-            sheetId: '10TegZTOq45WtGol7KftrJm080PbB7pwDEv92fnq9BXw',
-            data: formattedData
+            action: 'appendRows',
+            values: formattedValues
         };
-        
-        console.log('📤 Request data:', requestData);
-        console.log('📤 Request JSON:', JSON.stringify(requestData));
-        
-        // Încearcă mai întâi o verificare simplă a URL-ului
-        console.log('🔍 Testez accesibilitatea URL-ului...');
-        
-        try {
-            const testResponse = await fetch(SCRIPT_URL, {
-                method: 'GET',
-                mode: 'no-cors' // Pentru test de accesibilitate
-            });
-            console.log('✅ URL este accesibil');
-        } catch (testError) {
-            console.warn('⚠️ Posibilă problemă de accesibilitate URL:', testError);
-        }
-        
+
+        console.log('Request data:', JSON.stringify(requestData));
+
         // Trimitere request către Google Apps Script
-        console.log('📡 Trimit request POST...');
-        
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(requestData),
-            mode: 'cors'
+            body: JSON.stringify(requestData)
         });
-        
-        console.log('📨 Răspuns primit:');
-        console.log('- Status:', response.status);
-        console.log('- Status Text:', response.statusText);
-        console.log('- Headers:', Object.fromEntries(response.headers.entries()));
-        
-        // Verifică răspunsul
+
+        console.log('Response status:', response.status);
+
         if (!response.ok) {
-            console.error('❌ Răspuns cu eroare HTTP:', response.status, response.statusText);
-            throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.text();
-        console.log('📄 Răspuns brut:', result);
-        
+        console.log('Răspuns brut:', result);
+
         let jsonResult;
-        
         try {
             jsonResult = JSON.parse(result);
-            console.log('✅ JSON parsat cu succes:', jsonResult);
         } catch (parseError) {
-            console.warn('⚠️ Nu pot parsa JSON, verific conținutul...');
-            console.log('📄 Conținut răspuns:', result);
-            
-            // Verificăm dacă conține indicatori de succes
-            const resultLower = result.toLowerCase();
-            if (resultLower.includes('success') || 
-                resultLower.includes('ok') || 
-                resultLower.includes('added') ||
-                resultLower.includes('trimise')) {
-                console.log('✅ Detectat succes în răspuns text');
-                jsonResult = { 
-                    status: 'success', 
-                    message: 'Date trimise cu succes (detectat din text)',
-                    rawResponse: result
-                };
+            // Dacă răspunsul conține indicatori de succes
+            if (result.toLowerCase().includes('success')) {
+                jsonResult = { status: 'success', message: result };
             } else {
-                console.error('❌ Răspuns neașteptat:', result);
-                throw new Error(`Răspuns invalid de la server: ${result}`);
+                throw new Error(`Răspuns invalid: ${result}`);
             }
         }
-        
-        console.log('🎉 Rezultat final:', jsonResult);
-        
-        if (jsonResult.status === 'success' || 
-            jsonResult.result === 'success' || 
-            jsonResult.message?.toLowerCase().includes('success')) {
+
+        console.log('Rezultat:', jsonResult);
+
+        if (jsonResult.status === 'success') {
             return {
                 success: true,
                 message: jsonResult.message || 'Date trimise cu succes în Google Sheets',
-                rowsAdded: formattedData.length,
-                debugInfo: {
-                    requestData: requestData,
-                    response: jsonResult,
-                    url: SCRIPT_URL
-                }
+                rowsAdded: formattedValues.length
             };
         } else {
-            console.error('❌ Status de eroare în răspuns:', jsonResult);
-            throw new Error(jsonResult.message || jsonResult.error || 'Eroare necunoscută la trimiterea datelor');
+            throw new Error(jsonResult.message || 'Eroare la trimiterea datelor');
         }
-        
+
     } catch (error) {
-        console.error('💥 Eroare completă la trimiterea în Google Sheets:');
-        console.error('- Message:', error.message);
-        console.error('- Stack:', error.stack);
-        console.error('- Error object:', error);
-        
-        // Îmbunătățim mesajele de eroare pentru utilizator
-        let userMessage = 'Eroare la trimiterea datelor în Google Sheets';
-        
-        if (error.message.includes('fetch') || error.message.includes('TypeError')) {
-            userMessage = 'Eroare de conexiune. Verifică conexiunea la internet și configurația Google Apps Script.';
-        } else if (error.message.includes('CORS')) {
-            userMessage = 'Eroare CORS. Google Apps Script nu este configurat să permită accesul din browser.';
-        } else if (error.message.includes('HTTP error')) {
-            userMessage = 'Eroare de server. Google Apps Script poate avea probleme.';
-        } else if (error.message.includes('JSON') || error.message.includes('parse')) {
-            userMessage = 'Răspuns invalid de la server. Verifică logs-urile în Google Apps Script.';
-        }
-        
-        throw new Error(`${userMessage}\n\nDetalii tehnice: ${error.message}`);
+        console.error('Eroare la trimiterea în Google Sheets:', error);
+        throw new Error(`Eroare: ${error.message}`);
     }
 }
 
 // Funcție simplificată pentru testarea conexiunii
 async function testGoogleSheetsConnection() {
-    console.log('🧪 ÎNCEPUT TEST CONEXIUNE GOOGLE SHEETS');
-    
+    console.log('TEST CONEXIUNE GOOGLE SHEETS');
+
     try {
         const testData = [{
-            cod: 'TEST_DIM_C24_PL_1000x100x10',
+            cod: 'TEST_DIM_C24_PL',
             tip: 'DIM',
             lungime: 1000,
             latime: 100,
             grosime: 10,
             nr_buc: 1,
-            volum: '0.001000',
+            volum: 0.001,
             calitate: 'PL',
             furnizor: '',
             data: new Date().toLocaleDateString('ro-RO'),
@@ -662,72 +598,37 @@ async function testGoogleSheetsConnection() {
             bon_consum: '',
             locatie: 'A-1-0'
         }];
-        
-        console.log('📊 Date de test pregătite:', testData);
-        
+
         const result = await sendToGoogleSheets(testData);
-        console.log('✅ TEST REUȘIT:', result);
-        
-        if (typeof showNotification === 'function') {
-            showNotification('✅ Test conexiune Google Sheets REUȘIT!', 'success');
-        }
-        
+        console.log('TEST REUȘIT:', result);
+        showNotification('Test conexiune Google Sheets REUȘIT!', 'success');
         return result;
     } catch (error) {
-        console.error('❌ TEST EȘUAT:', error);
-        
-        if (typeof showNotification === 'function') {
-            showNotification(`❌ Test eșuat: ${error.message}`, 'error');
-        }
-        
+        console.error('TEST EȘUAT:', error);
+        showNotification('Test eșuat: ' + error.message, 'error');
         throw error;
     }
 }
 
 // Funcție pentru testarea URL-ului Google Apps Script
 async function testGoogleAppsScriptURL() {
-    const SCRIPT_ID = '1OGXPyimVPBpGCHCC9-qfjGM5lZ0cB-mQh8KDpme8waYyxbT-gJa5qpOC';
-    const SCRIPT_URL = `https://script.google.com/macros/s/${SCRIPT_ID}/exec`;
-    
-    console.log('🔍 Testez URL Google Apps Script:', SCRIPT_URL);
-    
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
+
+    console.log('Testez URL Google Apps Script:', SCRIPT_URL);
+
     try {
-        // Test GET request
-        console.log('📡 Încerc GET request...');
-        const getResponse = await fetch(SCRIPT_URL, {
-            method: 'GET',
-            mode: 'cors'
-        });
-        
-        console.log('📨 GET Response:');
-        console.log('- Status:', getResponse.status);
-        console.log('- Headers:', Object.fromEntries(getResponse.headers.entries()));
-        
-        const getText = await getResponse.text();
-        console.log('📄 GET Response text:', getText);
-        
-        if (getResponse.ok) {
-            console.log('✅ URL este accesibil via GET');
-            if (typeof showNotification === 'function') {
-                showNotification('✅ Google Apps Script URL este accesibil!', 'success');
-            }
-        } else {
-            console.warn('⚠️ GET request nu a fost complet reușit, dar poate funcționa pentru POST');
+        const response = await fetch(SCRIPT_URL, { method: 'GET' });
+        const text = await response.text();
+        console.log('Răspuns:', text);
+
+        if (response.ok) {
+            showNotification('Google Apps Script URL este accesibil!', 'success');
         }
-        
-        return {
-            accessible: getResponse.ok,
-            status: getResponse.status,
-            response: getText
-        };
-        
+
+        return { accessible: response.ok, status: response.status, response: text };
     } catch (error) {
-        console.error('❌ Eroare la testarea URL-ului:', error);
-        
-        if (typeof showNotification === 'function') {
-            showNotification(`❌ URL inaccesibil: ${error.message}`, 'error');
-        }
-        
+        console.error('Eroare la testarea URL-ului:', error);
+        showNotification('URL inaccesibil: ' + error.message, 'error');
         throw error;
     }
 }
