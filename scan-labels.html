@@ -1013,20 +1013,19 @@ function processQRForSheets(qrData) {
 
                 console.log('Request data:', JSON.stringify(requestData));
 
-                // Trimitere simplă POST
+                // Trimitere POST cu gestionare CORS pentru Google Apps Script
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'text/plain;charset=utf-8',
                     },
                     body: JSON.stringify(requestData)
                 });
 
                 console.log('Response status:', response.status);
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                console.log('Response type:', response.type);
 
                 const result = await response.text();
                 console.log('Răspuns:', result);
@@ -1035,6 +1034,7 @@ function processQRForSheets(qrData) {
                 try {
                     jsonResult = JSON.parse(result);
                 } catch (e) {
+                    // Dacă răspunsul nu e JSON dar conține success
                     if (result.toLowerCase().includes('success')) {
                         jsonResult = { status: 'success' };
                     } else {
