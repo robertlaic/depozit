@@ -10,8 +10,10 @@
         text-shadow: none !important;
     }
 
-    #label-preview, 
-    #label-preview * {
+    #label-preview,
+    #label-preview *,
+    .labels-preview-container,
+    .labels-preview-container * {
         visibility: visible !important;
     }
 
@@ -1070,7 +1072,7 @@ input[type="checkbox"] {
         background: white;
     }
 
-    /* Ascunde tot ce nu e etichetă */
+    /* Ascunde tot ce nu e etichetă și previne pagini goale */
     .header-section,
     .info-section,
     .form-section,
@@ -1082,15 +1084,35 @@ input[type="checkbox"] {
     .notification,
     .loader-overlay {
         display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        width: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+    }
+
+    /* Container principal fără padding/margin la print */
+    .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
     }
 
     /* Afișează doar containerul cu etichete */
     .labels-preview-container {
         display: block !important;
+        visibility: visible !important;
         border: none !important;
         padding: 0 !important;
         margin: 0 !important;
         background: white !important;
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
     }
 
     .primary-label {
@@ -1102,12 +1124,17 @@ input[type="checkbox"] {
         width: 297mm !important;
         height: 210mm !important;
         padding: 5% !important;
-        page-break-after: always !important;
         page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+    }
+
+    /* Page break doar între etichete (nu după ultima) */
+    .primary-label:not(:last-child) {
+        page-break-after: always !important;
     }
 
     .primary-label:last-child {
-        page-break-after: auto !important;
+        page-break-after: avoid !important;
     }
 
     /* Asigură că textul este negru și la size corect */
@@ -1116,6 +1143,20 @@ input[type="checkbox"] {
         color: #000000 !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+    }
+
+    /* Previne pagini goale după etichete */
+    .labels-preview-container::after {
+        content: '';
+        display: block;
+        height: 0;
+        page-break-after: avoid !important;
+    }
+
+    /* Previne orphans și widows */
+    .primary-label {
+        orphans: 1;
+        widows: 1;
     }
 }
 

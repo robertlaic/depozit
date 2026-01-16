@@ -16,7 +16,7 @@
 // CONSTANTE ȘI CONFIGURARE
 // ============================================
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7jLGhBtrJ0xn1OQ5smMEppY-zwqew1GSO6UWSJw9nWlvnMV1Y4lGTgtELtlDcW3g/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
 const SPREADSHEET_ID = '10TegZTOq45WtGol7KftrJm080PbB7pwDEv92fnq9BXw';
 const PRIMARY_SHEET_NAME = 'PrimaryLabelsCounter';
 
@@ -135,39 +135,44 @@ async function fetchLastNumber() {
  */
 async function saveLastNumber(number) {
     try {
-        console.log('Salvare număr în Google Sheets:', number);
+        console.log('=== SALVARE NUMĂR ===');
+        console.log('Număr de salvat:', number);
 
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'updateLastPrimaryNumber',
-                spreadsheetId: SPREADSHEET_ID,
-                sheetName: PRIMARY_SHEET_NAME,
-                lastNumber: number,
-                timestamp: new Date().toISOString()
-            })
+        // Folosim GET cu parametri URL pentru a evita CORS complet
+        const url = `${GOOGLE_SCRIPT_URL}?action=updateLastPrimaryNumber&spreadsheetId=${SPREADSHEET_ID}&sheetName=${PRIMARY_SHEET_NAME}&lastNumber=${number}&timestamp=${encodeURIComponent(new Date().toISOString())}`;
+
+        console.log('URL:', url);
+
+        const response = await fetch(url, {
+            method: 'GET'
         });
+
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        console.log('Răspuns salvare:', data);
+        const responseText = await response.text();
+        console.log('Response text:', responseText);
+
+        const data = JSON.parse(responseText);
+        console.log('Răspuns parsare:', data);
 
         if (data.success) {
-            console.log('Număr salvat cu succes în Google Sheets:', number);
+            console.log('✓ Număr salvat cu succes în Google Sheets:', number);
             return true;
         } else {
+            console.error('✗ Salvare eșuată:', data.error);
             throw new Error(data.error || 'Eroare la salvare');
         }
 
     } catch (error) {
-        console.error('Eroare la salvarea numărului:', error);
+        console.error('=== EROARE SALVARE ===');
+        console.error('Error object:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         showNotification('Atenție: Numărul nu a fost salvat în cloud! Verificați conexiunea.', 'error');
         return false;
     }
@@ -250,9 +255,9 @@ function generatePrimaryLabels() {
     const container = document.getElementById('labels-preview-container');
     container.innerHTML = ''; // Curăță preview-uri vechi
 
-    // Generează etichetele
+    // Generează etichetele (începe de la currentNumber + 1)
     for (let i = 0; i < count; i++) {
-        const labelNumber = currentNumber + i;
+        const labelNumber = currentNumber + 1 + i; // +1 pentru a începe de la următorul număr
         const labelElement = createLabelElement(labelNumber);
         container.appendChild(labelElement);
     }
@@ -269,7 +274,9 @@ function generatePrimaryLabels() {
     // Scroll la preview
     container.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    showNotification(`${count} etichete generate cu succes! (${currentNumber} - ${currentNumber + count - 1})`, 'success');
+    const firstLabel = currentNumber + 1;
+    const lastLabel = currentNumber + count;
+    showNotification(`${count} etichete generate cu succes! (${firstLabel} - ${lastLabel})`, 'success');
 }
 
 
@@ -304,8 +311,8 @@ async function printPrimaryLabels() {
 
     console.log('Inițiere tipărire...');
 
-    // Calculează noul număr
-    const newLastNumber = currentNumber + count;
+    // Calculează noul număr (ultimul număr tipărit)
+    const newLastNumber = currentNumber + count; // Ex: 22 + 3 = 25 (ultima etichetă = 25)
 
     // Deschide dialog-ul de tipărire
     window.print();
@@ -320,7 +327,7 @@ async function printPrimaryLabels() {
         currentNumber = newLastNumber;
         updateLastNumberDisplay(currentNumber);
 
-        showNotification(`✓ ${count} etichete tipărite! Următorul număr: ${currentNumber}`, 'success');
+        showNotification(`✓ ${count} etichete tipărite! Următoarea etichetă va începe de la: ${currentNumber + 1}`, 'success');
 
         // Curăță preview-ul după 3 secunde
         setTimeout(() => {
