@@ -969,7 +969,7 @@ function processQRForSheets(qrData) {
             }
         }
 
-        // Send data to Google Sheets - VERSIUNE SIMPLIFICATĂ
+        // Send data to Google Sheets - folosind form submission (evită CORS)
         async function sendToGoogleSheets() {
             if (scannedData.length === 0) {
                 showNotification('Nu există date de trimis!', 'error');
@@ -984,7 +984,6 @@ function processQRForSheets(qrData) {
                 console.log('Trimitere date către Google Sheets:', scannedData);
 
                 // Convert to array format for Google Sheets
-                // Ordinea: Cod, TIP, LUNGIME, LATIME, GROSIME, NR.BUC, VOLUM, CALITATE, FURNIZOR, DATA, ID_PROD, SPECIA, NUME, BON CONSUM, LOCATIE
                 const sheetsData = scannedData.map(row => [
                     row.cod || '',
                     row.tip || '',
@@ -1005,7 +1004,6 @@ function processQRForSheets(qrData) {
 
                 console.log('Date formatate ca arrays:', sheetsData);
 
-                // Prepare request data - doar action și values
                 const requestData = {
                     action: 'appendRows',
                     values: sheetsData
@@ -1013,39 +1011,77 @@ function processQRForSheets(qrData) {
 
                 console.log('Request data:', JSON.stringify(requestData));
 
-                // Trimitere POST cu no-cors (evită preflight, dar nu putem citi răspunsul)
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify(requestData)
-                });
+                // Folosim form submission într-un iframe ascuns (evită CORS complet)
+                await submitViaForm(SCRIPT_URL, requestData);
 
-                console.log('Response type:', response.type);
+                console.log('Form submission trimis cu succes');
 
-                // Cu no-cors, răspunsul este "opaque" și nu putem citi conținutul
-                // Presupunem că a funcționat dacă nu a dat eroare
-                if (response.type === 'opaque' || response.ok) {
-                    console.log('Request trimis cu succes (no-cors mode)');
+                updateStatus(`✅ ${scannedLabelsCount} etichete (${scannedData.length} rânduri) trimise! Verifică în Google Sheets.`, 'success');
+                showNotification(`${scannedLabelsCount} etichete trimise cu succes!`);
 
-                    updateStatus(`✅ ${scannedLabelsCount} etichete (${scannedData.length} rânduri) trimise! Verifică în Google Sheets.`, 'success');
-                    showNotification(`${scannedLabelsCount} etichete trimise! Verifică în Google Sheets.`);
-
-                    setTimeout(() => {
-                        clearScannedData();
-                        updateStatus('✅ Sistem gata pentru scanare', 'ready');
-                    }, 2000);
-                } else {
-                    throw new Error('Eroare la trimitere');
-                }
+                setTimeout(() => {
+                    clearScannedData();
+                    updateStatus('✅ Sistem gata pentru scanare', 'ready');
+                }, 2000);
 
             } catch (error) {
                 console.error('Eroare la trimitere:', error);
                 updateStatus('❌ Eroare la trimitere. Încearcă din nou.', 'error');
                 showNotification('Eroare: ' + error.message, 'error');
             }
+        }
+
+        // Funcție helper pentru form submission (evită CORS)
+        function submitViaForm(url, data) {
+            return new Promise((resolve, reject) => {
+                // Creează iframe ascuns
+                const iframeName = 'hidden_iframe_' + Date.now();
+                const iframe = document.createElement('iframe');
+                iframe.name = iframeName;
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                // Creează form
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                form.target = iframeName;
+                form.style.display = 'none';
+
+                // Adaugă datele ca input hidden
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'data';
+                input.value = JSON.stringify(data);
+                form.appendChild(input);
+
+                document.body.appendChild(form);
+
+                // Când iframe-ul se încarcă, considerăm că s-a trimis
+                iframe.onload = function() {
+                    console.log('Iframe loaded - date trimise');
+                    // Curăță după 2 secunde
+                    setTimeout(() => {
+                        document.body.removeChild(form);
+                        document.body.removeChild(iframe);
+                    }, 2000);
+                    resolve();
+                };
+
+                iframe.onerror = function() {
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                    reject(new Error('Eroare la trimitere'));
+                };
+
+                // Submit form
+                form.submit();
+
+                // Timeout de siguranță - presupunem succes după 3 secunde
+                setTimeout(() => {
+                    resolve();
+                }, 3000);
+            });
         }
 
         // Improved simulation function
