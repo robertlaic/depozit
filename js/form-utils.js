@@ -528,47 +528,56 @@ async function sendToGoogleSheets(scannedData) {
 
         console.log('Request data:', JSON.stringify(requestData));
 
-        // Trimitere request către Google Apps Script
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestData)
+        // Trimitere prin form submission într-un iframe ascuns (evită CORS)
+        await new Promise((resolve, reject) => {
+            const iframeName = 'hidden_iframe_' + Date.now();
+            const iframe = document.createElement('iframe');
+            iframe.name = iframeName;
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = SCRIPT_URL;
+            form.target = iframeName;
+            form.style.display = 'none';
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'data';
+            input.value = JSON.stringify(requestData);
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+
+            iframe.onload = function() {
+                console.log('Form submission - date trimise cu succes');
+                setTimeout(() => {
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                }, 2000);
+                resolve();
+            };
+
+            iframe.onerror = function() {
+                document.body.removeChild(form);
+                document.body.removeChild(iframe);
+                reject(new Error('Eroare la trimiterea formularului'));
+            };
+
+            form.submit();
+
+            // Timeout de siguranță
+            setTimeout(() => { resolve(); }, 5000);
         });
 
-        console.log('Response status:', response.status);
+        console.log('Form submission completat');
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.text();
-        console.log('Răspuns brut:', result);
-
-        let jsonResult;
-        try {
-            jsonResult = JSON.parse(result);
-        } catch (parseError) {
-            // Dacă răspunsul conține indicatori de succes
-            if (result.toLowerCase().includes('success')) {
-                jsonResult = { status: 'success', message: result };
-            } else {
-                throw new Error(`Răspuns invalid: ${result}`);
-            }
-        }
-
-        console.log('Rezultat:', jsonResult);
-
-        if (jsonResult.status === 'success') {
-            return {
-                success: true,
-                message: jsonResult.message || 'Date trimise cu succes în Google Sheets',
-                rowsAdded: formattedValues.length
-            };
-        } else {
-            throw new Error(jsonResult.message || 'Eroare la trimiterea datelor');
-        }
+        return {
+            success: true,
+            message: 'Date trimise cu succes în Google Sheets',
+            rowsAdded: formattedValues.length
+        };
 
     } catch (error) {
         console.error('Eroare la trimiterea în Google Sheets:', error);

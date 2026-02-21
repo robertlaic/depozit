@@ -1004,17 +1004,8 @@ function processQRForSheets(qrData) {
             values: sheetsData
         };
 
-        // Trimite ca POST text/plain (evită CORS preflight)
-        await fetch(SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(requestData)
-        });
-
-        // Cu no-cors nu putem citi răspunsul, dar datele ajung
-        // Verificăm prin GET dacă s-au adăugat
-        const checkUrl = SCRIPT_URL + '?action=getRowCount';
+        // Folosim form submission într-un iframe ascuns (evită CORS complet)
+        await submitViaForm(SCRIPT_URL, requestData);
         
         updateStatus(`✅ ${scannedLabelsCount} etichete (${scannedData.length} rânduri) trimise! Verifică în Google Sheets.`, 'success');
         showNotification(`${scannedLabelsCount} etichete trimise cu succes!`);
