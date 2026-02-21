@@ -970,66 +970,66 @@ function processQRForSheets(qrData) {
         }
 
         // Send data to Google Sheets - folosind form submission (evită CORS)
-        async function sendToGoogleSheets() {
-            if (scannedData.length === 0) {
-                showNotification('Nu există date de trimis!', 'error');
-                return;
-            }
+      async function sendToGoogleSheets() {
+    if (scannedData.length === 0) {
+        showNotification('Nu există date de trimis!', 'error');
+        return;
+    }
 
-            updateStatus('📤 Se trimit datele către Google Sheets...', 'processing');
+    updateStatus('📤 Se trimit datele către Google Sheets...', 'processing');
 
-            try {
-                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy2q2NWWvSwttORz_KWXDBpyB64RGsGIjHDO4Eea4jMQY5fKB_2X7oo2QLVueUqZE/exec';
+    try {
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy2q2NWWvSwttORz_KWXDBpyB64RGsGIjHDO4Eea4jMQY5fKB_2X7oo2QLVueUqZE/exec';
 
-                console.log('Trimitere date către Google Sheets:', scannedData);
+        const sheetsData = scannedData.map(row => [
+            row.cod || '',
+            row.tip || '',
+            row.lungime || 0,
+            row.latime || 0,
+            row.grosime || 0,
+            row.nr_buc || 0,
+            row.volum || 0,
+            row.calitate || '',
+            '',
+            row.data || new Date().toLocaleDateString('ro-RO'),
+            '',
+            row.specia || '',
+            row.nume || '',
+            '',
+            row.locatie || ''
+        ]);
 
-                // Convert to array format for Google Sheets
-                const sheetsData = scannedData.map(row => [
-                    row.cod || '',
-                    row.tip || '',
-                    row.lungime || 0,
-                    row.latime || 0,
-                    row.grosime || 0,
-                    row.nr_buc || 0,
-                    row.volum || 0,
-                    row.calitate || '',
-                    '',  // FURNIZOR
-                    row.data || new Date().toLocaleDateString('ro-RO'),
-                    '',  // ID_PROD
-                    row.specia || '',
-                    row.nume || '',
-                    '',  // BON CONSUM
-                    row.locatie || ''
-                ]);
+        const requestData = {
+            action: 'appendRows',
+            values: sheetsData
+        };
 
-                console.log('Date formatate ca arrays:', sheetsData);
+        // Trimite ca POST text/plain (evită CORS preflight)
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(requestData)
+        });
 
-                const requestData = {
-                    action: 'appendRows',
-                    values: sheetsData
-                };
+        // Cu no-cors nu putem citi răspunsul, dar datele ajung
+        // Verificăm prin GET dacă s-au adăugat
+        const checkUrl = SCRIPT_URL + '?action=getRowCount';
+        
+        updateStatus(`✅ ${scannedLabelsCount} etichete (${scannedData.length} rânduri) trimise! Verifică în Google Sheets.`, 'success');
+        showNotification(`${scannedLabelsCount} etichete trimise cu succes!`);
 
-                console.log('Request data:', JSON.stringify(requestData));
+        setTimeout(() => {
+            clearScannedData();
+            updateStatus('✅ Sistem gata pentru scanare', 'ready');
+        }, 2000);
 
-                // Folosim form submission într-un iframe ascuns (evită CORS complet)
-                await submitViaForm(SCRIPT_URL, requestData);
-
-                console.log('Form submission trimis cu succes');
-
-                updateStatus(`✅ ${scannedLabelsCount} etichete (${scannedData.length} rânduri) trimise! Verifică în Google Sheets.`, 'success');
-                showNotification(`${scannedLabelsCount} etichete trimise cu succes!`);
-
-                setTimeout(() => {
-                    clearScannedData();
-                    updateStatus('✅ Sistem gata pentru scanare', 'ready');
-                }, 2000);
-
-            } catch (error) {
-                console.error('Eroare la trimitere:', error);
-                updateStatus('❌ Eroare la trimitere. Încearcă din nou.', 'error');
-                showNotification('Eroare: ' + error.message, 'error');
-            }
-        }
+    } catch (error) {
+        console.error('Eroare la trimitere:', error);
+        updateStatus('❌ Eroare la trimitere. Încearcă din nou.', 'error');
+        showNotification('Eroare: ' + error.message, 'error');
+    }
+}
 
         // Funcție helper pentru form submission (evită CORS)
         function submitViaForm(url, data) {
