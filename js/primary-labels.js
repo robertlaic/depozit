@@ -16,7 +16,7 @@
 // CONSTANTE ȘI CONFIGURARE
 // ============================================
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy2q2NWWvSwttORz_KWXDBpyB64RGsGIjHDO4Eea4jMQY5fKB_2X7oo2QLVueUqZE/exec';
 const SPREADSHEET_ID = '10TegZTOq45WtGol7KftrJm080PbB7pwDEv92fnq9BXw';
 const PRIMARY_SHEET_NAME = 'PrimaryLabelsCounter';
 

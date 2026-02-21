@@ -488,7 +488,7 @@ function printLabel() {
 // Funcția pentru trimiterea datelor în Google Sheets - VERSIUNE CORECTATĂ
 async function sendToGoogleSheets(scannedData) {
     // URL-ul corect pentru Google Apps Script (același cu primary-labels)
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy2q2NWWvSwttORz_KWXDBpyB64RGsGIjHDO4Eea4jMQY5fKB_2X7oo2QLVueUqZE/exec';
 
     console.log('DEBUG: Începe trimiterea datelor');
     console.log('Date de trimis:', scannedData);
@@ -612,7 +612,7 @@ async function testGoogleSheetsConnection() {
 
 // Funcție pentru testarea URL-ului Google Apps Script
 async function testGoogleAppsScriptURL() {
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvKaZASiv0QOAVonD2dhpzhe2a58QqeB-zZlwUcS4VWTIpaKn9YHfOg25Rx0pQ5m4/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxy2q2NWWvSwttORz_KWXDBpyB64RGsGIjHDO4Eea4jMQY5fKB_2X7oo2QLVueUqZE/exec';
 
     console.log('Testez URL Google Apps Script:', SCRIPT_URL);
 
